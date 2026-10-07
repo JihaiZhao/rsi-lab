@@ -53,6 +53,8 @@ def main():
             baseline=[r for r in all_records if r['task']==name and r['job'].startswith('h0-search')]
             candidate=[r for r in all_records if r['task']==name and r['job']==current_job]
             candidate_label=text_score(candidate) if current_job else ('保留 H₀' if selected else '未评估')
+            if not current_job and any(s['domain']==domain for s in export['domain_stops']):
+                candidate_label='已停止，未演化'
             rows.append(f'<tr data-domain="{domain}"><td>{html.escape(name)}</td><td>{"Bio" if domain=="biology" else "Chem"}</td><td>{text_score(baseline)}</td><td>{candidate_label}</td><td>Evolve 搜索</td></tr>')
     final_records=[r for r in all_records if '-final-' in r['job']]
     if final_records:
