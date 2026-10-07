@@ -4,7 +4,7 @@ RSI Lab explores whether an agent can improve its own workflow by proposing chan
 
 The idea is independent of a particular model. **The implementation in this repository currently runs Sonnet 5.5 through native Claude Code.** Other model backends need runtime adapters and have not been validated here.
 
-[Website](https://sonnet-rsi-bio-chem-oct2026.wm823f.chatgpt.site) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
+[Website](https://rsi-lab.wm823f.chatgpt.site) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
 
 ## How it works
 
