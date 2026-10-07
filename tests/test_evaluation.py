@@ -16,5 +16,8 @@ class SelectionTests(unittest.TestCase):
         self.assertFalse(accept(rows(1,0),rows(0,1),['a','b'])['accepted'])
     def test_missing_score_cannot_be_silently_dropped(self):
         with self.assertRaises(ValueError):accept(rows(0,0),rows(1,None),['a','b'])
+    def test_passing_artifact_with_interrupted_execution_blocks_selection(self):
+        interrupted=rows(1,1);interrupted[0]['api_error']=True
+        with self.assertRaises(ValueError):accept(rows(0,0),interrupted,['a','b'])
 
 if __name__=='__main__':unittest.main()

@@ -27,9 +27,13 @@ def collect(job_dir):
             if event.get('type')=='assistant' and event.get('message',{}).get('model')})
         model_error=not models or any(model!='claude-sonnet-5-5' for model in models)
         api_error=any(event.get('type')=='result' and event.get('is_error') for event in native_events)
+        last_result=next((e for e in reversed(native_events) if e.get('type')=='result'),{})
+        exception=value.get('exception_info')
         records.append({'task':value['task_name'].split('/')[-1], 'trial':value['trial_name'],
-            'reward':reward, 'exception':value.get('exception_info'),
+            'reward':reward, 'exception':{'type':exception.get('exception_type')} if exception else None,
             'executed_models':models, 'model_audit_error':model_error, 'api_error':api_error,
+            'stop_reason':last_result.get('stop_reason'),
+            'error_message':last_result.get('result') if last_result.get('is_error') else None,
             'model_info':(value.get('agent_info') or {}).get('model_info'),
             'agent_result':agent, 'path':str(path.parent)})
     return records

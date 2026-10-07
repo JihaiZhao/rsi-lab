@@ -28,9 +28,10 @@ def main():
     def text_score(records):
         if not records:return '未评估'
         errors=[r for r in records if r.get('exception') or r.get('model_audit_error') or r.get('api_error') or r['reward'] is None]
-        valid=[r for r in records if r not in errors]
-        text=(f"{sum(r['reward'] for r in valid)} / {len(valid)}" if valid else '无有效成绩')
-        if errors:text+=f'；{len(errors)} 次异常'
+        graded=[r for r in records if r['reward'] is not None]
+        text=(f"{sum(r['reward'] for r in graded):g} / {len(records)}" if graded else '尚无评分')
+        if len(graded)<len(records):text+=f'；{len(records)-len(graded)} 次缺少评分'
+        if errors:text+=f'；{len(errors)} 次执行异常（未剔除）'
         return text
     rows=[]
     for domain,tasks in config['domains'].items():
