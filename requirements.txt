@@ -1,0 +1,3 @@
+# Python 3.12; installation is separate from running experiments.
+harbor==0.21.0
+claude-agent-sdk==0.2.123

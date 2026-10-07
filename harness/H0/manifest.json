@@ -1,0 +1,24 @@
+{
+  "label": "H0",
+  "kind": "native_claude_code",
+  "harbor_version": "0.21.0",
+  "agent": {
+    "name": "claude-code",
+    "model_name": "claude-sonnet-5-5",
+    "kwargs": {
+      "version": "2.1.293",
+      "reasoning_effort": "high",
+      "extra_env": {
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5-5",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-sonnet-5-5",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-5-5",
+        "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-5-5"
+      }
+    }
+  },
+  "custom_system_prompt": null,
+  "custom_tools": [],
+  "custom_skills": [],
+  "custom_hooks": [],
+  "notes": "Native Claude Code loop; no experimental extension bundle loaded. Official task instructions are supplied by Harbor."
+}

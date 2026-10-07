@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+.claude/
+external/
+runs/
+work/
+outputs/

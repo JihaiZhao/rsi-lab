@@ -1,0 +1,27 @@
+{
+  "status": "paused_for_design",
+  "model_roles": {
+    "policy": "claude-sonnet-5-5",
+    "proposer": "claude-sonnet-5-5",
+    "critic": "claude-sonnet-5-5",
+    "analyst": "claude-sonnet-5-5",
+    "subagent": "claude-sonnet-5-5"
+  },
+  "benchmark": {
+    "repository": "https://github.com/Yibo-Wen/as-bench",
+    "commit": "86159f8b9e6ab3ba08777209d095c1415abf97a5"
+  },
+  "design_status": "draft_not_authorized_to_run",
+  "evolve": [
+    "biology/jewett-lab/biosensor-active-learning"
+  ],
+  "ood": [
+    "biology/deepmind/nuclease-active-learning"
+  ],
+  "proposed_trials_per_task": 3,
+  "search_rounds": null,
+  "candidates_per_round": null,
+  "acceptance_rule": null,
+  "search_compute_budget": null,
+  "local_baseline_plan": null
+}
