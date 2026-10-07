@@ -4,7 +4,7 @@ RSI Lab explores whether an agent can improve its own workflow by proposing chan
 
 The idea is independent of a particular model. **The implementation in this repository currently runs Sonnet 5.5 through native Claude Code.** Other model backends need runtime adapters and have not been validated here.
 
-[Website](https://rsi-lab.wm823f.chatgpt.site) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
+[Website](https://jihaizhao.github.io/rsi-lab/) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
 
 ## How it works
 
@@ -95,3 +95,5 @@ Open `http://localhost:8766`. The site is plain HTML, CSS and JavaScript; it nee
 ## Provenance
 
 The AS-Bench checkout is pinned in the experiment configuration and is not vendored here. The archived Harbor adapter retains its upstream license in `reference/harbor/LICENSE`. See `REQUIREMENTS.md` for the recorded experiment requirements.
+
+The public website is deployed by `.github/workflows/pages.yml`. Pushing changes to `website/dist/` on `main` publishes the updated snapshot to GitHub Pages; it does not run experiments in GitHub Actions.
