@@ -53,3 +53,7 @@ H0 仍为不可变原生 Claude Code，不修改其归档 manifest。
 展示真实流程、源码哈希、每轮提案和 diff、critic 结论、接受或拒绝、
 每任务通过数/3 与总通过数/6、token 与标价估算。33.3% 单独标为外部参考。
 不混入此前 Bio 或本地基线数据，不隐去失败和中断，不宣称完整复现 RRSI。
+
+## Framework identity
+
+The project is RSI Lab, a model-independent RSI framework concept. Sonnet 5.5 is the fixed backend for the current chemistry experiment, not the framework name. The website must use plain English and explain the actual improvement loop before presenting performance. Other model backends require compatible runtime adapters and have not been validated in this experiment.
