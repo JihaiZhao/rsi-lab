@@ -34,11 +34,12 @@ class StartTests(unittest.TestCase):
             (p/'instructions.md').write_text('Changed mechanism')
             self.assertNotEqual(first,build('candidate','example',p)['agents'][0]['kwargs']['harness_sha256'])
 
-    def test_clean_paused_start_and_immutable_h0(self):
+    def test_clean_start_and_immutable_h0(self):
         config=json.loads((ROOT/'config/experiment.json').read_text())
-        self.assertEqual(config['status'],'paused_for_design')
+        self.assertIn(config['status'],{'preparing_budget_pending','ready','running','complete','failed'})
+        self.assertEqual(config['ood'],[])
+        self.assertEqual(len(config['evolve']),4)
         self.assertEqual(set(config['model_roles'].values()),{'claude-sonnet-5-5'})
-        self.assertIsNone(config['acceptance_rule'])
         self.assertEqual((ROOT/'harness/working/instructions.md').read_text(),'')
         provenance=json.loads((ROOT/'harness/H0/provenance.json').read_text())
         for file,sha in provenance['h0_files'].items():
