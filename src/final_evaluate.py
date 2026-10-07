@@ -25,6 +25,9 @@ def main():
         subprocess.run(command,check=True)
         from evaluation import collect
         rows=collect(ROOT/'runs/jobs'/f'{a.domain}-{arm}-final-01')
+        expected=len(protocol['domains'][a.domain])*protocol['final_trials_per_task_per_arm']
+        if len(rows)!=expected:
+            raise RuntimeError('Final evaluation has missing trials; do not report completion')
         if any(r.get('api_error') or r.get('exception') or r.get('model_audit_error') for r in rows):
             raise RuntimeError('Final evaluation had an execution error; stop without retry')
 
