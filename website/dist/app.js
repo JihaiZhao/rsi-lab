@@ -1,11 +1,3 @@
-const steps=[
- ['Analyst','Start with what is actually known.','In the first round, Sonnet reads only the tasks’ public instructions. Later rounds add this experiment’s scores and execution traces, including unsuccessful candidates. Earlier experiments are excluded.'],
- ['Proposer','Turn an idea into an actual edit.','Sonnet edits a copy of the retained harness. It explains the problem the change should solve and the outcome it expects. This is a testable proposal, not evidence that performance improved.'],
- ['Critic','Check the boundaries before spending trials.','A separate Sonnet call checks for hidden answers, task-specific hardcoding, changes to the scoring system, and model or billing overrides. Approval allows testing; it does not certify that the idea works.'],
- ['Task agent','Run the candidate on both chemistry tasks.','The native Claude Code agent uses the proposed harness for three Propylene trials and three Suzuki trials. Each trial starts fresh. The official verifier assigns the score; the proposer does not grade its own work.'],
- ['Selection rule','Keep a change only when it clears the rule.','The first candidate needs at least three passes out of six. Later candidates must improve the total without reducing either task’s pass count. Rejected edits are discarded, but their results stay in the evidence for the next round.']
-];
-document.querySelectorAll('.step').forEach(button=>button.addEventListener('click',()=>{const i=Number(button.dataset.step);document.querySelectorAll('.step').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',String(b===button));});document.getElementById('step-label').textContent=`Step ${i+1} / ${steps[i][0]}`;document.getElementById('step-title').textContent=steps[i][1];document.getElementById('step-copy').textContent=steps[i][2];}));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const errors=t=>t.exception||t.model_audit_error||t.api_error||t.reward==null;
 const passed=ts=>ts.reduce((n,t)=>n+(t.reward===1?1:0),0);
