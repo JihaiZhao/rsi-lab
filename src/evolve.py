@@ -159,6 +159,9 @@ def main():
                     verdict={'round':number,'job':job,**accept(records,candidate,names)}
                     if verdict['accepted']:
                         parent=directory/'candidate';records=candidate
+            verdict.update(proposal=proposal.get('result',''),diff=diff,
+                parent_sha256=bundle_hash(directory/'parent'),
+                candidate_sha256=bundle_hash(directory/'candidate'))
             history.append(verdict);dump(directory/'decision.json',verdict);dump(root/'history.json',history)
             print('Decision:',json.dumps(verdict),flush=True)
         selected={'domain':args.domain,'bundle':str(parent) if parent!=ROOT/'harness/working' else None,
