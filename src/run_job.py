@@ -40,7 +40,14 @@ def main():
     (record/'config.json').write_text(json.dumps(spec, indent=2)+'\n')
     (record/'usage-before.json').write_text(json.dumps(usage, indent=2)+'\n')
     print('Starting fresh subscription-only job:', args.name, flush=True)
-    result = asyncio.run(Job(config).run())
+    async def run():
+        job = await Job.create(config)
+        return await job.run()
+    try:
+        result = asyncio.run(run())
+    except BaseException as error:
+        (record/'failure.json').write_text(json.dumps({'type':type(error).__name__, 'message':str(error)},indent=2))
+        raise
     (record/'job-result.json').write_text(result.model_dump_json(indent=2))
     print('Job finished:', args.name, flush=True)
 
