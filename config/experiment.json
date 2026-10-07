@@ -1,5 +1,5 @@
 {
-  "status": "ready",
+  "status": "running",
   "model_roles": {
     "policy": "claude-sonnet-5-5",
     "proposer": "claude-sonnet-5-5",

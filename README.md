@@ -31,11 +31,11 @@ high effort，无自定义 prompt、工具、skills 或 hooks。保持原生对�
 - `src/native_bundle.py`：源码哈希、文件和语法检查；它是检查器，不是安全沙箱。
 - `src/job_spec.py`：只生成配置，区分裸 H₀ 与候选；不会调用模型或启动 Docker。
 - `reference/harbor/`：原生适配器快照及许可证。
-- `runs/`：空；未来每个实验独立封存代码、配置、角色模型、轨迹、成绩与费用。
+- `runs/`：每个实验独立封存配置、角色模型、轨迹、成绩与用量。
 - `external/`：已准备固定版本的官方 benchmark。
 
 没有搬运旧的自定义模型循环、Chemistry 优化工具、搜索控制器和网页成绩。
-新的多轮 RSI 控制器尚未实现；搜索预算和接受规则已在 config/experiment.json 记录。Bio、Chem 分别独立演化，四个正式任务全部为 evolve，不设 OOD。
+多轮 RSI 控制器已实现，候选由隔离容器中的 Sonnet 原生循环产生；搜索预算和接受规则已在 config/experiment.json 记录。Bio、Chem 分别独立演化，四个正式任务全部为 evolve，不设 OOD。
 
 ## 只读检查
 
