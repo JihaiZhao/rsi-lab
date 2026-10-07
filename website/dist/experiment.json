@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-07T23:04:17.688387+00:00",
+  "updated_at": "2026-10-07T23:06:22.965027+00:00",
   "experiment_id": "chem-rsi-fresh-20261007",
   "protocol": {
     "status": "running",
@@ -59,6 +59,29 @@
     "final_reporting": "Freeze selected source and report its 3 trials per task from evolve; no additional baseline or held-out runs"
   },
   "trials": [
+    {
+      "task": "propylene-active-learning",
+      "trial": "propylene-active-learning__2spmhfa",
+      "reward": 1.0,
+      "exception": null,
+      "executed_models": [
+        "claude-sonnet-5-5"
+      ],
+      "model_audit_error": false,
+      "api_error": false,
+      "stop_reason": "end_turn",
+      "model_info": {
+        "name": "claude-sonnet-5-5",
+        "provider": "anthropic"
+      },
+      "agent_result": {
+        "n_input_tokens": 1022523,
+        "n_cache_tokens": 977649,
+        "n_output_tokens": 20956,
+        "cost_usd": 0.5844938000000001
+      },
+      "job": "chemistry-r01-search"
+    },
     {
       "task": "propylene-active-learning",
       "trial": "propylene-active-learning__JqhaGf9",
@@ -130,6 +153,29 @@
       "decision": null,
       "diff": "--- parent/instructions.md\n+++ candidate/instructions.md\n@@ -0,0 +1,70 @@\n+# Budgeted active-learning campaign protocol\n+\n+You are running a budgeted experimental campaign through the `asb` CLI. You pick batches of experiments across a few rounds, then deliver a self-contained `/app/final_model.js` that ranks unseen candidates. Both the experiments you choose and the final ranking model are scored. Rounds are scarce and cannot be undone. Compute and thinking are cheap. Work carefully, and write down your decisions as you go.\n+\n+Follow the task statement exactly. Where it conflicts with this file, the task statement wins. Never use online solutions or hints specific to the task.\n+\n+## 0. Setup (before spending any round)\n+\n+1. Run `asb --help`, `asb campaign` and `asb status`. Note the round count, batch size, pool size, file names, column names and deadline.\n+2. Read every file in `/app/data/`, especially `README.md`, plus `/app/MODEL_FORMAT.md` and `/app/model_template.js`. Note the exact input string format `predict()` receives, the level names, and any limits on the file (pure JS, no imports, deterministic, finite output).\n+3. Write `/app/notes.md` with the rules, the deadline, and a running log: what you did in each round, why, and the results. Update it after each step so you can recover after a context reset.\n+4. Note the start time (`date +%s`). Aim to finish with at least 30 minutes spare. Keep a simple approach if time is short. A correct, delivered, simple model beats an unfinished elaborate one.\n+\n+## 1. Understand the data before modelling\n+\n+- Look at the seed or screen data: size, ranges, how skewed the target is, and which factors vary. Use pandas or numpy if they are available. Otherwise use plain Python or node.\n+- The score is about **ranking the top of the list**, not about average error. Most candidates are uninteresting, and a few matter. Look at what the best known points have in common.\n+- Check how the target is defined, for example whether relevance is normalised within a group such as a substrate. If so, the model must rank *within groups*. Use group-wise centering of the target, or group-by-factor interactions, instead of a global average.\n+- If a provided dataset is from a different domain than the orderable pool (for example a different substrate, or only pure and binary entries versus dilute mixtures), use it as evidence about *trends*. Do not copy its top entries as a shortlist.\n+- Check which descriptors are available for each factor: provided tables, physical properties, or one-hot levels. Prefer descriptors that generalise to unseen combinations.\n+\n+## 2. Round planning\n+\n+For every round:\n+\n+1. Refit the model on **all** data observed so far. This means the seed data plus all earlier rounds.\n+2. Score every not-yet-ordered candidate. Choose the batch by mixing three kinds of picks:\n+   - **Exploit**: the top predictions. Take these greedily, but with a diversity penalty, so the batch isn't a set of near-duplicates of one design. For example, cap how many picks share the same value of a dominant factor, or penalise similarity to picks already chosen.\n+   - **Explore**: candidates with the largest model uncertainty or disagreement. Use the spread of an ensemble or bootstrap, or distance from observed data. Also pick candidates that cover factor levels or combinations not yet tested, or tested only once.\n+   - **Coverage**: for grouped problems, make sure every group (substrate, element and so on) gets some picks. Never leave a group with zero observations.\n+3. Suggested split, to adjust to the budget: in the first round, about 40% exploit and 60% explore or coverage. In the middle rounds, about 60% exploit. In the last round, about 75–80% exploit, because the pass criterion counts hits among the ordered designs. Keep some exploration anyway, because the final model benefits from varied training data.\n+4. Keep an eye on the discovery criterion in the task statement (the number of hits among all ordered designs). Early rounds can still contribute hits, so they shouldn't be spent only on exploration.\n+5. **Preflight the batch CSV before `asb run`.** Check each of these, and print the results:\n+   - exactly the required number of rows\n+   - the single required column name\n+   - no duplicate IDs in the file\n+   - every ID is in the catalogue\n+   - no ID was ordered in an earlier round\n+   - the file has no index column and no extra whitespace\n+6. Run `asb run`, then save and read the results. Append to `/app/notes.md`: the picks, the split of exploit versus explore, the best result, the number of hits so far, and what the results changed in your beliefs about the model. A rejected request does not consume a round. Read the error, fix the file, and retry. Never resubmit different content for an already accepted round.\n+\n+## 3. Modelling guidance\n+\n+- The training data is small (a few hundred rows at most). Use low-capacity, regularised models: ridge or additive models on level or descriptor features, with a limited number of pairwise interactions that you chose. Small ensembles (random forest or gradient boosting, shallow) are acceptable for choosing batches, but the final model has to be expressible in plain JavaScript. A table of coefficients and a few arithmetic operations is the safest choice.\n+- Select models by cross-validation that matches the real test. Use grouped folds that hold out whole groups where that mimics the held-out set (for example, leave-one-substrate-out, leave-one-element-out). Score with NDCG@k using the task's relevance definition, not R². Spearman correlation is a useful secondary check.\n+- If two models score within noise of each other, choose the simpler one. With few observations of a noisy target, differences of a few hundredths in NDCG are noise.\n+- Measurement noise matters. Where replicate standard deviations are given, don't trust small differences between candidates. Prefer features that explain broad trends.\n+- Treat each prior (physics-based descriptor, a trend from the screen on a different substrate) as a feature with a regularised weight. Don't hard-code it as a rule. Let the data in the pool shrink it.\n+- Do not tune to the last decimal using the training data. You can't see the held-out set, and your in-sample fit overstates the real score.\n+- Models must give **sensible fallbacks for unseen levels**. An unknown element, solvent or ligand should contribute 0 (the mean), not NaN.\n+\n+## 4. Final model (`/app/final_model.js`)\n+\n+1. Start from `/app/model_template.js`. Keep the required export and signature exactly as the template shows.\n+2. Embed all learned parameters and descriptor tables directly in the file. It must not read files, use the network, use randomness or the clock, or import anything unavailable.\n+3. It must score each input **independently** of the other inputs and of call order. It must return a finite number. Guard against NaN with a final `Number.isFinite` check that returns a safe fallback.\n+4. Parse the input string exactly as the task states. Test with example strings from the catalogue, including edge cases (the fewest and most components, rare levels).\n+5. Before delivering, run all of these:\n+   - `asb deliver /app/final_model.js --validate-only`\n+   - A node smoke test that loads the file, calls `predict` on **every catalogue entry** and on all training entries, and asserts that each output is finite. Run it twice to check the outputs are identical. Run it on a shuffled order to check that the outputs don't depend on order.\n+   - A sanity check that the predictions are not constant, and that the top-ranked catalogue entries are plausible given the observed best results. Also compute the NDCG on your own observed data, as a rough sanity check only.\n+6. Only then run `asb deliver /app/final_model.js`. Delivery is the final step. Do it once the validation passes, and with enough time remaining. If delivery is rejected, read the error, fix it, and redeliver if the rules allow it.\n+\n+## 5. Habits\n+\n+- Make a backup copy of any model file before you rewrite it (`cp final_model.js final_model.js.bak`), and make a working draft of `final_model.js` after round 1. Then a valid file exists if time runs out. Overwrite it as the model improves.\n+- Keep scripts in `/app/work/` (for example `fit.py`, `pick_round_N.py`, `check_model.js`) so you can rerun them after each round. Save the fitted parameters as JSON.\n+- Write down the random seeds. Everything should be reproducible.\n+- Don't read, probe or modify any evaluator, verifier or lab internals, and don't try to learn the hidden held-out designs. Only use the `asb` interface and the files provided.\n+- In the final message, report honestly: the number of hits in your batches, what you validated, what you couldn't verify, and whether delivery succeeded. Don't claim a pass or a score that you did not see.\n",
       "trials": [
+        {
+          "task": "propylene-active-learning",
+          "trial": "propylene-active-learning__2spmhfa",
+          "reward": 1.0,
+          "exception": null,
+          "executed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "model_audit_error": false,
+          "api_error": false,
+          "stop_reason": "end_turn",
+          "model_info": {
+            "name": "claude-sonnet-5-5",
+            "provider": "anthropic"
+          },
+          "agent_result": {
+            "n_input_tokens": 1022523,
+            "n_cache_tokens": 977649,
+            "n_output_tokens": 20956,
+            "cost_usd": 0.5844938000000001
+          },
+          "job": "chemistry-r01-search"
+        },
         {
           "task": "propylene-active-learning",
           "trial": "propylene-active-learning__JqhaGf9",
