@@ -1,58 +1,97 @@
-# Sonnet 5.5 RSI · 全新工作区
+# RSI Lab
 
-**状态：用户已授权开始实验；使用现有 Max 订阅开始运行；禁止付费 API 与额外计费。**
+RSI Lab explores whether an agent can improve its own workflow by proposing changes, testing them, and learning from the results.
 
-目标是在同一个 Sonnet 5.5 模型下，检验 RSI 改进的 harness 是否比原生
-Claude Code harness 更有效。实验 policy、proposer、critic、analyst 和 subagent
-全部使用 `claude-sonnet-5-5`。模型不换，权重不训练。
+The idea is independent of a particular model. **The implementation in this repository currently runs Sonnet 5.5 through native Claude Code.** Other model backends need runtime adapters and have not been validated here.
 
-先读 [需求总结](REQUIREMENTS.md)，再讨论 [实验草案](config/experiment.json)。
-这里没有旧项目的提案、结果、失败轨迹、实验真值、会话记忆或凭据。
-这意味着新 proposer 可以从空白上下文开始，不意味着历史实验从未发生。
+[Website](https://sonnet-rsi-bio-chem-oct2026.wm823f.chatgpt.site) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
 
-## 基础版本 H₀
+## How it works
 
-[H₀ manifest](harness/H0/manifest.json) 定义：原生 Claude Code + Sonnet 5.5，
-high effort，无自定义 prompt、工具、skills 或 hooks。保持原生对话和工具循环，
-不是单次 LLM 调用。软件版本固定为 Harbor 0.21.0、Claude Code 2.1.293。
+1. **Analyze:** read public task instructions and, after the first round, this experiment’s scores and execution traces.
+2. **Propose:** edit a copy of the retained harness and state the expected effect.
+3. **Review:** a separate critic checks the proposal for leakage and changes outside the allowed boundaries.
+4. **Evaluate:** run fresh task agents with the candidate; use the official benchmark verifier.
+5. **Select:** keep an eligible improvement as the next parent. Preserve rejected proposals and their evidence too.
 
-[原生适配器快照](reference/harbor/claude_code.py) 是 Harbor 启动 Claude Code 的
-公开 Python 适配器，不是 Claude Code 内部运行循环的全部源码。
-实际 H₀ 通过已安装 Harbor 的 `claude-code` agent 加载；快照仅用于审计。
-[文件哈希](harness/H0/provenance.json) 用于核对起点。
+The editable harness can contain instructions, skills, helper scripts and supported native hooks. Instructions and helpers can also manage task-local notes and workflow checks. The model weights, native conversation/tool loop, task environments and scoring rules remain fixed.
 
-`harness/working/instructions.md` 是空的扩展入口，没有任何演化策略。
-未来的候选可以添加策略、skills、工具与 hooks。它还不是一个已评估版本，
-更不可以把加载了扩展包的运行冒充裸 H₀。
+This is an experimental implementation inspired by recursive self-improvement. It does not reproduce the full RRSI paper or its held-out evaluation protocol.
 
-## 已剥离的基础代码
+## Current chemistry experiment
 
-- `src/native_agent.py`：保持 Harbor 原生 `ClaudeCode.run`，加载候选扩展包；不是 proposer。
-- `src/native_bundle.py`：源码哈希、文件和语法检查；它是检查器，不是安全沙箱。
-- `src/job_spec.py`：只生成配置，区分裸 H₀ 与候选；不会调用模型或启动 Docker。
-- `reference/harbor/`：原生适配器快照及许可证。
-- `runs/`：每个实验独立封存配置、角色模型、轨迹、成绩与用量。
-- `external/`：已准备固定版本的官方 benchmark。
+- Tasks: Propylene active learning and Suzuki condition screening.
+- All model roles: `claude-sonnet-5-5`, high effort.
+- Each candidate: three trials per task, six trials total.
+- Budget: at most five modification rounds, one candidate per round.
+- First acceptance: at least three official passes out of six, with no execution errors.
+- Later acceptance: more total passes than the retained candidate, with no decline on either task. Ties retain the parent.
+- No local H0 baseline rerun and no additional final repeats.
+- The user-specified **33.3%** benchmark value is an external reference, not a paired local baseline.
+- Results are evolve-task scores used during selection, not evidence of generalization.
 
-没有搬运旧的自定义模型循环、Chemistry 优化工具、搜索控制器和网页成绩。
-多轮 RSI 控制器已实现，候选由隔离容器中的 Sonnet 原生循环产生；搜索预算和接受规则已在 config/experiment.json 记录。最新范围为 Chem-only 从头开始：2 个任务、每任务每候选 3 次 trials、最多 5 轮。不再跑本地 H0；33.3% 仅为用户指定的 benchmark 外部参考。旧运行保留但不向新角色开放。
+The website includes a dated snapshot of observed results. Pending evaluations are not zero scores. Full local trajectories and credentials are excluded from Git.
 
-## 只读检查
+## Repository map
 
-建议使用 Python 3.12。依赖版本见 `requirements.txt`；这里没有自动安装或运行脚本。
+| Path | Purpose |
+| --- | --- |
+| `src/evolve.py` | Analyst → proposer → critic → evaluation → selection controller |
+| `src/native_agent.py` | Fixed bridge that loads a candidate into native Claude Code |
+| `src/native_bundle.py` | Bundle validation and source hashing |
+| `src/run_job.py` | Subscription guard and Harbor job launcher |
+| `src/evaluation.py` | Official rewards and execution/model audits |
+| `src/subscription_auth.py` | Load subscription credentials into process memory |
+| `src/update_website.py` | Export the active experiment’s public snapshot |
+| `config/experiment.json` | Recorded experimental protocol |
+| `harness/H0/` | Immutable baseline definition and provenance |
+| `harness/working/` | Empty extension starting point |
+| `website/dist/` | Static English website and interactive process diagram |
+| `tests/` | Offline protocol and adapter checks |
+| `reference/harbor/` | Upstream adapter snapshot with its license |
+
+`src/final_evaluate.py` is a legacy helper from an earlier protocol. It is not used by the current experiment, which has no final repeat phase.
+
+## Local setup
+
+Requires Python 3.12, Docker, Node.js, and a Claude Max account already authenticated through Claude Code. The role container installs Claude Code 2.1.293; Harbor is pinned to 0.21.0.
 
 ```bash
+python3.12 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+
+git clone https://github.com/Yibo-Wen/as-bench external/as-bench
+git -C external/as-bench checkout 86159f8b9e6ab3ba08777209d095c1415abf97a5
+
+docker build -f infrastructure/roles.Dockerfile -t rsi-sonnet-roles:2.1.293 .
 python -m unittest discover -s tests
-PYTHONPATH=src python src/job_spec.py --arm baseline --task biology/jewett-lab/biosensor-active-learning
 ```
 
-第二条命令只把 Harbor job 配置打印到终端。没有后台任务，没有定时任务，
-没有调用模型，也不会下载任务数据。已获恢复授权；仅使用现有订阅执行模型调用。
+Keep runtime credentials outside this repository. The current adapter reads an existing Claude Code OAuth session from `~/.claude/.credentials.json`. It requires extra-usage billing to be disabled, checks subscription availability before calls, and stops on limits rather than switching to paid API billing. This authentication path is specific to the current runtime, not a universal model API.
 
-## 参考方法
+## Run a fresh experiment
 
-- [AS-Bench](https://github.com/Yibo-Wen/as-bench)：官方任务与实验室 API、评分器。
-- [RRSI](https://github.com/google-research/rrsi)：领域内演化，再冻结做 OOD 测试。
-- [Meta-Harness](https://github.com/stanford-iris-lab/meta-harness)：开放 harness 的自动改进。
+Review `config/experiment.json` and set a new, unused `experiment_id` before starting. A completed or interrupted run is never silently resumed.
 
-这些是方法参考。本项目目前只准备了干净的起点，不能宣称已复现 RRSI。
+```bash
+python src/evolve.py --domain chemistry
+```
+
+This starts real model calls and task containers using the configured subscription. The controller archives each proposal, diff, critic decision, evaluation and selection under `runs/experiments/<experiment_id>/`. Earlier experiments are not passed into a fresh run. Do not give agents private benchmark truth or solutions.
+
+The original H0 remains native Claude Code with no extension bundle; loading a candidate does not make it H0. Candidate code must not edit the fixed bridge or verifier.
+
+## Preview the website
+
+```bash
+# Refresh only after local run records exist for the configured experiment.
+python src/update_website.py
+python -m http.server 8766 --directory website/dist
+```
+
+Open `http://localhost:8766`. The site is plain HTML, CSS and JavaScript; it needs no build step. The included `experiment.json` is a published snapshot, not a live stream. Website publication is separate from running the experiment.
+
+## Provenance
+
+The AS-Bench checkout is pinned in the experiment configuration and is not vendored here. The archived Harbor adapter retains its upstream license in `reference/harbor/LICENSE`. See `REQUIREMENTS.md` for the recorded experiment requirements.

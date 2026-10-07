@@ -8,3 +8,13 @@ external/
 runs/
 work/
 outputs/
+
+# Local credentials, runtimes and deployment artifacts
+*.pem
+*.key
+*.p12
+*.log
+node_modules/
+.sites-runtime/
+website/.sites-runtime/
+.DS_Store
