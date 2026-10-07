@@ -16,7 +16,8 @@ def collect(job_dir):
             reward = next(iter(rewards.values()))
         if reward not in (0,1,None):
             raise ValueError('Unexpected official binary reward')
-        agent = value.get('agent_result') or {}
+        raw_agent = value.get('agent_result') or {}
+        agent = {k:raw_agent.get(k) for k in ['n_input_tokens','n_cache_tokens','n_output_tokens','cost_usd']}
         native_events=[]
         log=path.parent/'agent/claude-code.txt'
         if log.is_file():

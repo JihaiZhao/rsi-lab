@@ -16,6 +16,7 @@ def main():
             record.pop('path',None);record['job']=job.name;all_records.append(record)
     export={'updated_at':datetime.now(timezone.utc).isoformat(),'protocol':config,
             'trials':all_records,'decisions':[],'billing':'subscription_only; CLI dollar estimates are not charges'}
+    export['domain_stops']=[json.loads(p.read_text()) for p in (ROOT/'runs/domain-stops').glob('*.json')]
     parts=[]
     for domain in ['biology','chemistry']:
         for directory in sorted((ROOT/'runs/evolution'/domain).glob('*round-*')):
@@ -69,6 +70,12 @@ def main():
     replace('history-detail',f'已归档 {len(export["decisions"])} 个候选决定。任务执行已报告 input tokens：{input_tokens:,}；output tokens：{output_tokens:,}。尚在执行或缺失的用量不包含在内。订阅调用的美元估算不是实际额外扣费。<br><a href="experiment.json">下载实验摘要与协议</a>')
     page=re.sub(r'<!-- decision-log-start -->.*?<!-- decision-log-end -->','',page,flags=re.S)
     if parts:page=page.replace('<footer>','<!-- decision-log-start --><section><h2>逐轮真实改动</h2>'+''.join(parts)+'</section><!-- decision-log-end --><footer>')
+    page=re.sub(r'<!-- stop-log-start -->.*?<!-- stop-log-end -->','',page,flags=re.S)
+    if export['domain_stops']:
+        notices=[]
+        for stop in export['domain_stops']:
+            notices.append('<p><b>'+html.escape(stop['domain'])+'</b>：'+html.escape(stop['reason'])+'。保留已有官方评分及执行状态，不自动重试或绕过模型拒绝。</p>')
+        page=page.replace('<footer>','<!-- stop-log-start --><section><h2>停止与异常记录</h2>'+''.join(notices)+'</section><!-- stop-log-end --><footer>')
     page=page.replace('Sonnet RSI / 当前实验尚无 performance 结果','Sonnet RSI / 仅展示本次实验的实际记录')
     target.write_text(page)
     (ROOT/'website/dist/experiment.json').write_text(json.dumps(export,ensure_ascii=False,indent=2)+'\n')
