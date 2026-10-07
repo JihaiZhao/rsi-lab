@@ -18,6 +18,8 @@ class StartTests(unittest.TestCase):
         self.assertNotIn('import_path',agent)
         self.assertNotIn('harness_dir',agent['kwargs'])
         self.assertNotIn('append_system_prompt',agent['kwargs'])
+        self.assertNotIn('extra_env',agent['kwargs'])
+        self.assertEqual(set(agent['env'].values()),{'claude-sonnet-5-5'})
         self.assertEqual(agent['kwargs']['version'],'2.1.293')
         with self.assertRaises(ValueError):build('baseline','example',ROOT/'harness/working')
 
@@ -41,6 +43,22 @@ class StartTests(unittest.TestCase):
         provenance=json.loads((ROOT/'harness/H0/provenance.json').read_text())
         for file,sha in provenance['h0_files'].items():
             self.assertEqual(hashlib.sha256((ROOT/file).read_bytes()).hexdigest(),sha)
+
+    def test_harbor_factory_builds_both_arms_without_running(self):
+        try:
+            from harbor.agents.factory import AgentFactory
+            from harbor.models.trial.config import AgentConfig
+            from harbor.agents.installed.claude_code import ClaudeCode
+            from native_agent import RSIClaudeCode
+        except ImportError:
+            self.skipTest('Install pinned Harbor in Python 3.12 for adapter integration test')
+        with tempfile.TemporaryDirectory() as d:
+            for arm in ['baseline','candidate']:
+                config=build(arm,'example',ROOT/'harness/working' if arm=='candidate' else None)
+                agent=AgentFactory.create_agent_from_config(AgentConfig(**config['agents'][0]),logs_dir=Path(d)/arm)
+                self.assertIs(type(agent).run,ClaudeCode.run)
+                self.assertEqual(agent.version(),'2.1.293')
+                self.assertEqual(isinstance(agent,RSIClaudeCode),arm=='candidate')
 
 
 if __name__=='__main__':unittest.main()

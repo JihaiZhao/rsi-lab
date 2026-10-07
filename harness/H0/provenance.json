@@ -3,7 +3,7 @@
   "adapter_source": "Installed Harbor 0.21.0 package; source snapshot is reference only, not a complete Claude Code implementation.",
   "bridge_source": "Extracted native_agent.py and native_bundle.py from existing integration, without any candidate harness. Removed old task-specific denylist from generic bundle lint.",
   "h0_files": {
-    "harness/H0/manifest.json": "9934b1e5301f02e86b34c3bdbf60a90d72b1a582669e5e56a35f59b8bea3cdd3",
+    "harness/H0/manifest.json": "47e08320bd673a932962ff9eae6aefd1c8723a1cafe4502740f2edb332b6581d",
     "reference/harbor/claude_code.py": "2e6f4b5d6394887e6b0a438a13465cbe5deb1652d5536f2c5fd916b9fea15ab8"
   }
 }
