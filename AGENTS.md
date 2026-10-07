@@ -25,3 +25,5 @@ Read README.md and REQUIREMENTS.md before making changes.
 - Runtime credentials belong outside this repository. Never copy account tokens,
   user settings, global memory, or .claude credentials into this workspace.
 - Commit concrete changes promptly. Do not claim results that have not run.
+
+- User permits Codex co-authorship: add `Co-authored-by: Codex <noreply@openai.com>` to future Codex-assisted commits; preserve the user as primary author and do not rewrite existing history.
