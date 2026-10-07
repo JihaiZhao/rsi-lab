@@ -23,7 +23,9 @@ Do not encode exact measured designs, answers, benchmark identity dispatch or hi
 outcomes in a candidate. Changes may include instructions.md, skills/*.md, tools/*.py
 or *.js, memory scaffolding, and native hooks in settings.json. Only hooks may be
 configured in settings.json. Harness runtime root is /opt/rsi-harness.
-Do not add model-weight training, external paid services or model-provider overrides.
+Do not train or replace foundation-model weights, add external paid services or
+override model providers. Fitting task-level statistical models using permitted
+in-episode measurements remains part of the official task.
 '''
 
 
