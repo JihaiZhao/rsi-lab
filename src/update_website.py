@@ -17,6 +17,14 @@ def main():
     export={'updated_at':datetime.now(timezone.utc).isoformat(),'protocol':config,
             'trials':all_records,'decisions':[],'billing':'subscription_only; CLI dollar estimates are not charges'}
     export['domain_stops']=[json.loads(p.read_text()) for p in (ROOT/'runs/domain-stops').glob('*.json')]
+    export['role_calls']=[]
+    for path in (ROOT/'runs/evolution').glob('*/*/*-stdout.json'):
+        try:call=json.loads(path.read_text())
+        except ValueError:continue
+        export['role_calls'].append({'domain':path.parent.parent.name,'round':path.parent.name,
+            'role':path.name.removesuffix('-stdout.json'),'is_error':call.get('is_error'),
+            'model_usage':call.get('modelUsage'),'usage':call.get('usage'),
+            'list_price_estimate_usd':call.get('total_cost_usd')})
     parts=[]
     for domain in ['biology','chemistry']:
         for directory in sorted((ROOT/'runs/evolution'/domain).glob('*round-*')):
@@ -67,7 +75,9 @@ def main():
     replace('protocol-detail','每领域最多 5 轮，每轮 1 个候选；搜索阶段每任务运行 1 次。仅当官方通过率严格提高且无逐任务通过回退时接受，同分保留父版本。最终 H₀ 与选定版本各每任务复测 3 次。仅使用现有 Max 订阅，禁止付费 API 与额外计费；遇到订阅限制停止，不自动重试。搜索是小样本探索，不声明统计显著性。')
     input_tokens=sum((r['agent_result'].get('n_input_tokens') or 0) for r in all_records)
     output_tokens=sum((r['agent_result'].get('n_output_tokens') or 0) for r in all_records)
-    replace('history-detail',f'已归档 {len(export["decisions"])} 个候选决定。任务执行已报告 input tokens：{input_tokens:,}；output tokens：{output_tokens:,}。尚在执行或缺失的用量不包含在内。订阅调用的美元估算不是实际额外扣费。<br><a href="experiment.json">下载实验摘要与协议</a>')
+    policy_cost=sum((r['agent_result'].get('cost_usd') or 0) for r in all_records)
+    role_cost=sum((r.get('list_price_estimate_usd') or 0) for r in export['role_calls'])
+    replace('history-detail',f'已归档 {len(export["decisions"])} 个候选决定、{len(export["role_calls"])} 次演化角色调用。任务执行已报告 input tokens：{input_tokens:,}；output tokens：{output_tokens:,}。任务调用标价估算 ${policy_cost:.3f}，分析／提案／检查标价估算 ${role_cost:.3f}。尚在执行或缺失的用量不包含在内；这些估算不是订阅外扣费。<br><a href="experiment.json">下载实验摘要、角色用量与协议</a>')
     page=re.sub(r'<!-- decision-log-start -->.*?<!-- decision-log-end -->','',page,flags=re.S)
     if parts:page=page.replace('<footer>','<!-- decision-log-start --><section><h2>逐轮真实改动</h2>'+''.join(parts)+'</section><!-- decision-log-end --><footer>')
     page=re.sub(r'<!-- stop-log-start -->.*?<!-- stop-log-end -->','',page,flags=re.S)
