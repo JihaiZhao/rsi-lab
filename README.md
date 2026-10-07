@@ -35,7 +35,7 @@ high effort，无自定义 prompt、工具、skills 或 hooks。保持原生对�
 - `external/`：已准备固定版本的官方 benchmark。
 
 没有搬运旧的自定义模型循环、Chemistry 优化工具、搜索控制器和网页成绩。
-多轮 RSI 控制器已实现，候选由隔离容器中的 Sonnet 原生循环产生；搜索预算和接受规则已在 config/experiment.json 记录。Bio、Chem 分别独立演化，四个正式任务全部为 evolve，不设 OOD。
+多轮 RSI 控制器已实现，候选由隔离容器中的 Sonnet 原生循环产生；搜索预算和接受规则已在 config/experiment.json 记录。最新范围为 Chem-only 从头开始：2 个任务、每任务每候选 3 次 trials、最多 5 轮。不再跑本地 H0；33.3% 仅为用户指定的 benchmark 外部参考。旧运行保留但不向新角色开放。
 
 ## 只读检查
 

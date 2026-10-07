@@ -13,8 +13,6 @@
   },
   "design_status": "user_authorized_experiments_2026_10_07",
   "evolve": [
-    "biology/jewett-lab/biosensor-active-learning",
-    "biology/deepmind/nuclease-active-learning",
     "chemistry/sargent-lab/propylene-active-learning",
     "chemistry/pfizer/suzuki-condition-screen"
   ],
@@ -23,11 +21,10 @@
   "search_rounds": 5,
   "candidates_per_round": 1,
   "acceptance_rule": {
-    "primary": "official_binary_pass_rate",
-    "require_strict_gain": true,
-    "require_no_per_task_pass_regression": true,
+    "initial": "at least 3 official passes in 6 trials; external 33.3 percent is only a reference threshold",
+    "subsequent": "strict pass-rate improvement and no per-task pass-rate regression against accepted local incumbent",
     "ties": "retain_parent",
-    "sampling": "exploratory_single_trial_per_task; final_repeat_3"
+    "no_accepted_candidate": "retain bare H0 as unmeasured; report every measured candidate separately"
   },
   "search_compute_budget": {
     "billing": "existing_claude_max_subscription_only",
@@ -35,13 +32,9 @@
     "extra_usage_required": false,
     "on_quota_limit": "stop_and_preserve; no_automatic_resume"
   },
-  "local_baseline_plan": "one search trial per task; independent final H0 and selected reevaluation, 3 trials per task per arm",
+  "local_baseline_plan": "Do not run H0; user-specified external benchmark reference only",
   "evolution_unit": "domain",
   "domains": {
-    "biology": [
-      "biology/jewett-lab/biosensor-active-learning",
-      "biology/deepmind/nuclease-active-learning"
-    ],
     "chemistry": [
       "chemistry/sargent-lab/propylene-active-learning",
       "chemistry/pfizer/suzuki-condition-screen"
@@ -50,6 +43,15 @@
   "deliverable": "Website documenting actual RSI process, candidate diffs, decisions, performance and costs",
   "budget_status": "subscription_only_authorized",
   "search_rounds_scope": "maximum_per_domain",
-  "search_trials_per_task": 1,
-  "final_trials_per_task_per_arm": 3
+  "search_trials_per_task": 3,
+  "final_trials_per_task_per_arm": 0,
+  "experiment_id": "chem-rsi-fresh-20261007",
+  "n_concurrent_trials": 3,
+  "baseline_reference": {
+    "reported_percent": 33.3,
+    "source": "user-specified benchmark reference",
+    "url": "https://yibow.me/autonomous-science-bench/leaderboard",
+    "paired_local_baseline": false
+  },
+  "final_reporting": "Freeze selected source and report its 3 trials per task from evolve; no additional baseline or held-out runs"
 }

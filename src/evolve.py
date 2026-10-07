@@ -101,15 +101,17 @@ def source_diff(parent,candidate):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--domain',choices=['biology','chemistry'],required=True)
-    parser.add_argument('--baseline-job',required=True)
+    parser.add_argument('--baseline-job')
     args=parser.parse_args()
     config=json.loads((ROOT/'config/experiment.json').read_text())
-    root=ROOT/'runs/evolution'/args.domain
+    run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
+    root=run_root/'evolution'/args.domain
     root.mkdir(parents=True,exist_ok=False)
     dump(root/'protocol.json',config)
     tasks=config['domains'][args.domain];names=[Path(p).name for p in tasks]
-    records=[r for r in collect(ROOT/'runs/jobs'/args.baseline_job) if r['task'] in names]
-    accept(records,records,names)  # Fail closed on incomplete baseline.
+    records=[r for r in collect(run_root/'jobs'/args.baseline_job) if r['task'] in names] if args.baseline_job else []
+    if records:accept(records,records,names)
+    feedback_records=records
     parent=ROOT/'harness/working'
     history=[]
     try:
@@ -117,9 +119,13 @@ def main():
             directory=root/f'{args.domain}-round-{number:02d}';directory.mkdir()
             shutil.copytree(parent,directory/'parent')
             shutil.copytree(parent,directory/'candidate')
-            evidence_for(directory,tasks,records,history)
+            evidence_for(directory,tasks,feedback_records,history)
+            dump(directory/'evidence/reference.json',config.get('baseline_reference',{}))
             analysis=role('analyst',directory,
                 'Read all supplied task instructions, official results and public execution trajectories. '
+                'First round may have no execution records: then analyze the public task requirements, '
+                'explicitly state no baseline was measured, and do not invent observed failures. '
+                'Later evidence may include rejected candidates: distinguish their sources from the parent. '
                 'Explain observed failure modes and uncertainties supported by evidence. '
                 'Suggest testable reusable harness-mechanism hypotheses, without exact benchmark answers. '
                 'You do not edit files. Return a concise analysis for an independent proposer.')
@@ -155,10 +161,22 @@ def main():
                 else:
                     job=f'{args.domain}-r{number:02d}-search'
                     code=subprocess.run([sys.executable,str(ROOT/'src/run_job.py'),'--name',job,
-                        '--domain',args.domain,'--bundle',str(directory/'candidate'),'--attempts','1']).returncode
+                        '--domain',args.domain,'--bundle',str(directory/'candidate'),'--attempts',str(config['search_trials_per_task'])]).returncode
                     if code:raise RuntimeError('Evaluation process failed; no automatic retry')
-                    candidate=collect(ROOT/'runs/jobs'/job)
-                    verdict={'round':number,'job':job,**accept(records,candidate,names)}
+                    candidate=collect(run_root/'jobs'/job)
+                    if len(candidate)!=len(tasks)*config['search_trials_per_task']:
+                        raise RuntimeError('Missing planned candidate trials')
+                    feedback_records=candidate
+                    if records:
+                        selection=accept(records,candidate,names)
+                    else:
+                        accept(candidate,candidate,names)  # Require complete, normally executed trials.
+                        passed=sum(r['reward'] for r in candidate)
+                        selection={'accepted':passed>=3,'rule':'initial_external_reference_threshold',
+                            'reference_percent':33.3,'passes':passed,'trials':len(candidate),
+                            'reason':'above_external_reference' if passed>=3 else 'not_above_external_reference',
+                            'paired_local_improvement':False}
+                    verdict={'round':number,'job':job,**selection}
                     if verdict['accepted']:
                         parent=directory/'candidate';records=candidate
             verdict.update(proposal=proposal.get('result',''),diff=diff,

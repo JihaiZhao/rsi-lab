@@ -20,13 +20,15 @@ def main():
         raise RuntimeError('Subscription-only authorization not recorded')
     if not args.name.replace('-', '').replace('_', '').isalnum():
         raise ValueError('Invalid job name')
-    destination = ROOT/'runs/jobs'/args.name
+    run_root=ROOT/'runs/experiments'/experiment['experiment_id'] if experiment.get('experiment_id') else ROOT/'runs'
+    destination = run_root/'jobs'/args.name
     if destination.exists():
         raise RuntimeError('Job already exists; will not resume or overwrite')
     tasks = experiment['evolve'] if args.domain == 'all' else experiment['domains'][args.domain]
     spec = build('candidate' if args.bundle else 'baseline', tasks[0], args.bundle, args.attempts)
     spec['tasks'] = [{'path': str(ROOT/'external/as-bench/tasks'/task)} for task in tasks]
-    spec.update(job_name=args.name, n_concurrent_trials=2, retry={'max_retries':0})
+    spec.update(job_name=args.name, jobs_dir=str(run_root/'jobs'),
+        n_concurrent_trials=experiment.get('n_concurrent_trials',2), retry={'max_retries':0})
     from harbor.models.job.config import JobConfig
     from harbor.job import Job
     config = JobConfig(**spec)
@@ -35,7 +37,7 @@ def main():
         if name not in env:
             del os.environ[name]
     os.environ.update(env)
-    record = ROOT/'runs/launches'/args.name
+    record = run_root/'launches'/args.name
     record.mkdir(parents=True, exist_ok=False)
     (record/'config.json').write_text(json.dumps(spec, indent=2)+'\n')
     (record/'usage-before.json').write_text(json.dumps(usage, indent=2)+'\n')

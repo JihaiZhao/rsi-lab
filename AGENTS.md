@@ -13,10 +13,12 @@ Read README.md and REQUIREMENTS.md before making changes.
   the fixed bridge, task environments, measurement data and verifier.
 - Do not read other project directories, old transcripts, old result archives or
   previous harness candidates as evidence for new proposals.
-- All official Bio and Chem tasks at the pinned benchmark commit are evolve.
-  Evolve one independent harness per domain from H0. There is no OOD set.
-  Protein is archived upstream and outside the pinned dataset allowlist.
-  Report development performance honestly; do not claim unseen-task generalization.
+- Latest user scope: fresh Chem-only RSI on the two official chemistry tasks.
+  Evaluate every candidate with 3 trials per task, at most 5 modification rounds.
+  Do not run a local H0 baseline. Show the user-specified benchmark 33.3% only as
+  an external reference, never as a paired local improvement estimate.
+  Exclude all earlier runs, including this workspace's H0 batch, from new roles.
+  There is no OOD set; report evolve performance without generalization claims.
 - Do not inspect private benchmark truth or solutions. Only official task-public
   inputs and in-episode measurements may reach the task agent.
 - Do not silently resume or retry interrupted runs. Preserve all outcomes.
