@@ -20,7 +20,7 @@
   ],
   "ood": [],
   "proposed_trials_per_task": 3,
-  "search_rounds": null,
+  "search_rounds": 5,
   "candidates_per_round": null,
   "acceptance_rule": null,
   "search_compute_budget": null,
@@ -37,5 +37,6 @@
     ]
   },
   "deliverable": "Website documenting actual RSI process, candidate diffs, decisions, performance and costs",
-  "budget_status": "Awaiting user amount; no model calls started"
+  "budget_status": "Awaiting user amount; no model calls started",
+  "search_rounds_scope": "maximum_per_domain"
 }
