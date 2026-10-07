@@ -3,8 +3,9 @@
 Read README.md and REQUIREMENTS.md before making changes.
 
 - The user resumed experiments on 2026-10-07. Prepare and run the fresh experiment,
-  subject to its recorded budget. Do not start paid/model calls while the requested
-  budget answer remains pending. No background monitors are requested.
+  subject to its recorded budget: existing Claude Max subscription only. No paid API
+  or extra-usage billing. Stop on quota exhaustion; never switch billing routes.
+  No background monitors are requested.
 - Policy, proposer, critic, analyst and subagent models must all be Sonnet 5.5.
 - H0 is native Claude Code, without a custom extension bundle. Do not change its
   archived manifest or call a thin one-turn model wrapper H0.

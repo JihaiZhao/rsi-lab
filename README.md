@@ -1,6 +1,6 @@
 # Sonnet 5.5 RSI · 全新工作区
 
-**状态：用户已授权开始实验；正在准备运行，等待总预算。当前没有模型调用或实验成绩。**
+**状态：用户已授权开始实验；使用现有 Max 订阅开始运行；禁止付费 API 与额外计费。**
 
 目标是在同一个 Sonnet 5.5 模型下，检验 RSI 改进的 harness 是否比原生
 Claude Code harness 更有效。实验 policy、proposer、critic、analyst 和 subagent
@@ -32,10 +32,10 @@ high effort，无自定义 prompt、工具、skills 或 hooks。保持原生对�
 - `src/job_spec.py`：只生成配置，区分裸 H₀ 与候选；不会调用模型或启动 Docker。
 - `reference/harbor/`：原生适配器快照及许可证。
 - `runs/`：空；未来每个实验独立封存代码、配置、角色模型、轨迹、成绩与费用。
-- `external/`：空；讨论完成后再准备固定版本的官方 benchmark。
+- `external/`：已准备固定版本的官方 benchmark。
 
 没有搬运旧的自定义模型循环、Chemistry 优化工具、搜索控制器和网页成绩。
-新的多轮 RSI 控制器尚未实现；搜索预算和接受规则也尚未定稿。Bio、Chem 分别独立演化，四个正式任务全部为 evolve，不设 OOD。
+新的多轮 RSI 控制器尚未实现；搜索预算和接受规则已在 config/experiment.json 记录。Bio、Chem 分别独立演化，四个正式任务全部为 evolve，不设 OOD。
 
 ## 只读检查
 
@@ -47,7 +47,7 @@ PYTHONPATH=src python src/job_spec.py --arm baseline --task biology/jewett-lab/b
 ```
 
 第二条命令只把 Harbor job 配置打印到终端。没有后台任务，没有定时任务，
-没有调用模型，也不会下载任务数据。已获恢复授权；总预算确认前不执行模型调用。
+没有调用模型，也不会下载任务数据。已获恢复授权；仅使用现有订阅执行模型调用。
 
 ## 参考方法
 
