@@ -26,6 +26,8 @@ def collect(job_dir):
                 except ValueError:pass
         models=sorted({event.get('message',{}).get('model') for event in native_events
             if event.get('type')=='assistant' and event.get('message',{}).get('model') not in (None,'<synthetic>')})
+        models=sorted(set(models) | {model for event in native_events
+            if event.get('type')=='result' for model in (event.get('modelUsage') or {})})
         model_error=not models or any(model!='claude-sonnet-5-5' for model in models)
         api_error=any(event.get('type')=='result' and event.get('is_error') for event in native_events)
         last_result=next((e for e in reversed(native_events) if e.get('type')=='result'),{})
