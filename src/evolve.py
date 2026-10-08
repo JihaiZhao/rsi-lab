@@ -199,7 +199,7 @@ def main():
                 'You do not edit files. Return a concise analysis for an independent proposer.')
             (directory/'evidence/analysis.txt').write_text(analysis.get('result',''))
             if structured:
-                from structured_search import PLAN_SCHEMA, validate_plan, changed_files, telemetry
+                from structured_search import PLAN_SCHEMA, validate_plan, validate_plan_fields, changed_files, telemetry
                 plan_result=run_role('proposer',directory,
                     'Planning only: do not edit files yet. Read evidence, history, search-directive and parent. '
                     'Select ONE observed recurring problem and ONE falsifiable mechanism hypothesis. '
@@ -209,6 +209,10 @@ def main():
                     'Review failed hypotheses and do not repeat them without new evidence.', PLAN_SCHEMA)
                 mechanism=plan_result.get('structured_output')
                 dump(directory/'mechanism.json',mechanism)
+                plan_errors=validate_plan_fields(mechanism)
+                if plan_errors:
+                    dump(directory/'plan-validation.json',{'errors':plan_errors})
+                    raise RuntimeError('Invalid mechanism plan before implementation: '+str(plan_errors))
                 dump(directory/'evidence/mechanism.json',mechanism)
                 # Preserve planning output separately before the implementation proposer call.
                 for f in list(directory.glob('proposer-*')):
