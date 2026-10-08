@@ -31,7 +31,7 @@
     "extra_usage_required": false,
     "on_quota_limit": "stop_and_preserve; no_automatic_resume"
   },
-  "local_baseline_plan": "Do not run H0; user-specified external benchmark reference only",
+  "local_baseline_plan": "No local H0 baseline and no external reference for Bio",
   "evolution_unit": "domain",
   "domains": {
     "biology": [
@@ -44,7 +44,7 @@
   "search_rounds_scope": "maximum_per_domain",
   "search_trials_per_task": 3,
   "final_trials_per_task_per_arm": 0,
-  "experiment_id": "bio-terra-rsi-fresh-20261008",
+  "experiment_id": "bio-terra-rsi-restart-20261008-01",
   "n_concurrent_trials": 3,
   "baseline_reference": {},
   "final_reporting": "Freeze selected source and report its 3 trials per task from evolve; no additional baseline or held-out runs",
