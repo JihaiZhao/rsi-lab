@@ -42,7 +42,7 @@ def collect(job_dir):
     return records
 
 
-def accept(parent, candidate, task_names):
+def accept(parent, candidate, task_names, rule=None):
     def scores(rows):
         result = {}
         for task in task_names:
@@ -52,6 +52,12 @@ def accept(parent, candidate, task_names):
             result[task] = sum(r['reward'] for r in trials)/len(trials)
         return result
     previous, proposed = scores(parent), scores(candidate)
+    if rule == 'total_non_decreasing':
+        gain = sum(r['reward'] for r in candidate)-sum(r['reward'] for r in parent)
+        if any(sum(r['task']==t for r in parent)!=sum(r['task']==t for r in candidate) for t in task_names):
+            raise ValueError('Unequal trial counts')
+        return {'accepted':gain>=0,'parent':previous,'candidate':proposed,'rule':rule,
+                'reason':'total_gain' if gain>0 else ('tie_accept_candidate' if gain==0 else 'total_regression')}
     better = sum(proposed.values()) > sum(previous.values())
     no_regression = all(proposed[t]>=previous[t] for t in task_names)
     return {'accepted':better and no_regression, 'parent':previous, 'candidate':proposed,

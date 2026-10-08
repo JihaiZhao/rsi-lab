@@ -102,6 +102,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--domain',choices=['biology','chemistry'],required=True)
     parser.add_argument('--baseline-job')
+    parser.add_argument('--resume-state', type=Path)
     parser.add_argument('--resume-after-round1', action='store_true', help='Explicit authorized continuation after recorded Round 1 reevaluation')
     parser.add_argument('--config',type=Path,default=ROOT/'config/experiment.json')
     args=parser.parse_args()
@@ -122,7 +123,7 @@ def main():
         return role_runner(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
     run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
     root=run_root/'evolution'/args.domain
-    if not args.resume_after_round1:
+    if not args.resume_after_round1 and not args.resume_state:
         root.mkdir(parents=True,exist_ok=False)
         dump(root/'protocol.json',config)
     tasks=config['domains'][args.domain];names=[Path(p).name for p in tasks]
@@ -151,6 +152,16 @@ def main():
             raise RuntimeError('Round 1 candidate changed')
         (root/'continuation-started.json').open('x').write(json.dumps({'authorized':True,'start_round':2}))
         start_round=2
+    if args.resume_state:
+        state=json.loads(args.resume_state.read_text())
+        history=json.loads((root/'history.json').read_text())
+        start_round=state['start_round']
+        parent=Path(state['parent'])
+        if bundle_hash(parent)!=state['sha256']:raise RuntimeError('Resume candidate changed')
+        from repaired_evaluation import collect_refs
+        records=collect_refs(run_root/'jobs',state['refs'],collect_results)
+        accept(records,records,names)
+        feedback_records=collect_results(run_root/'jobs'/state['feedback_job'])
     try:
         for number in range(start_round,config['search_rounds']+1):
             directory=root/f'{args.domain}-round-{number:02d}';directory.mkdir()
@@ -205,7 +216,7 @@ def main():
                         raise RuntimeError('Missing planned candidate trials')
                     feedback_records=candidate
                     if records:
-                        selection=accept(records,candidate,names)
+                        selection=accept(records,candidate,names,rule=config.get('selection_rule'))
                     else:
                         accept(candidate,candidate,names)  # Require complete, normally executed trials.
                         passed=sum(r['reward'] for r in candidate)
@@ -225,7 +236,7 @@ def main():
                   'sha256':bundle_hash(parent),'history':history,'frozen_at':datetime.now(timezone.utc).isoformat()}
         dump(root/'selected.json',selected)
     except BaseException as error:
-        dump(root/('continuation-stopped.json' if args.resume_after_round1 else 'stopped.json'),{'type':type(error).__name__,'message':str(error),
+        dump(root/('continuation-stopped.json' if (args.resume_after_round1 or args.resume_state) else 'stopped.json'),{'type':type(error).__name__,'message':str(error),
             'at':datetime.now(timezone.utc).isoformat(),'automatic_resume':False})
         raise
 
