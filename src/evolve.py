@@ -107,6 +107,8 @@ def main():
     parser.add_argument('--config',type=Path,default=ROOT/'config/experiment.json')
     args=parser.parse_args()
     config=json.loads(args.config.read_text())
+    if config.get('budget_status') != 'subscription_only_authorized' or config['search_rounds'] < 1:
+        raise RuntimeError('Explicit round budget and subscription authorization required')
     collect_results=collect
     if config.get('policy_runtime') == 'codex':
         from cached_codex_runtime import validate_cache
@@ -133,6 +135,18 @@ def main():
     parent=ROOT/'harness/working'
     history=[]
     start_round=1
+    if config.get('seed_experiment'):
+        seed=ROOT/'runs/experiments'/config['seed_experiment']
+        selected=json.loads((seed/'evolution'/args.domain/'selected.json').read_text())
+        parent=Path(selected['bundle'])
+        if bundle_hash(parent)!=selected['sha256']:raise RuntimeError('Seed hash mismatch')
+        records=collect_results(seed/'jobs'/config['seed_job'])
+        if len(records)!=len(tasks)*config['search_trials_per_task']:raise RuntimeError('Incomplete seed')
+        accept(records,records,names)
+        feedback_records=records
+        history=json.loads((seed/'evolution'/args.domain/'history.json').read_text())
+        for item in history:item['phase']=1
+        dump(root/'seed.json',{'experiment':config['seed_experiment'],'job':config['seed_job'],'sha256':selected['sha256'],'no_baseline_rerun':True})
     if args.resume_after_round1:
         authorization=json.loads((root/'round-01-reevaluation.json').read_text())
         if authorization.get('status') != 'complete':
@@ -169,6 +183,12 @@ def main():
             shutil.copytree(parent,directory/'candidate')
             evidence_for(directory,tasks,feedback_records,history)
             dump(directory/'evidence/reference.json',config.get('baseline_reference',{}))
+            structured=config.get('structured_search',False)
+            directive={}
+            if structured:
+                from structured_search import directives
+                directive=directives(history)
+                dump(directory/'evidence/search-directive.json',directive)
             analysis=run_role('analyst',directory,
                 'Read all supplied task instructions, official results and public execution trajectories. '
                 'First round may have no execution records: then analyze the public task requirements, '
@@ -178,14 +198,33 @@ def main():
                 'Suggest testable reusable harness-mechanism hypotheses, without exact benchmark answers. '
                 'You do not edit files. Return a concise analysis for an independent proposer.')
             (directory/'evidence/analysis.txt').write_text(analysis.get('result',''))
+            if structured:
+                from structured_search import PLAN_SCHEMA, validate_plan, changed_files, telemetry
+                plan_result=run_role('proposer',directory,
+                    'Planning only: do not edit files yet. Read evidence, history, search-directive and parent. '
+                    'Select ONE observed recurring problem and ONE falsifiable mechanism hypothesis. '
+                    'Choose component instructions, tool, skill, or memory. Cite episode/step evidence. '
+                    'Explain why that component fits. When structural exploration is required, choose an untried '
+                    'component or give an evidence-based exploration_waiver; otherwise waiver is empty. '
+                    'Review failed hypotheses and do not repeat them without new evidence.', PLAN_SCHEMA)
+                mechanism=plan_result.get('structured_output')
+                dump(directory/'mechanism.json',mechanism)
+                dump(directory/'evidence/mechanism.json',mechanism)
+                # Preserve planning output separately before the implementation proposer call.
+                for f in list(directory.glob('proposer-*')):
+                    f.rename(f.with_name('planner-'+f.name[len('proposer-'):]))
             proposal=run_role('proposer',directory,
                 'Read /workspace/evidence (including analysis and prior decisions) and the parent bundle. '
                 'Make one coherent candidate in /workspace/candidate, improving the parent based on evidence. '
                 'You may create reusable tools, skills, context or memory mechanisms supported by the boundary. '
                 'You must actually write the candidate files. Keep instructions.md as the entry point. '
+                'If evidence/mechanism.json exists, implement only its single hypothesis, with supporting entry-point edits. '
+                'Provide reusable interfaces and tiny synthetic smoke-test fixtures for new executable helpers. '
                 'Return the hypothesis, changed components and expected measurable effect. '
                 'Do not alter any other path; do not execute experiments or claim unmeasured improvement.')
             errors=validate_bundle(directory/'candidate')
+            if structured:
+                errors += validate_plan(mechanism,changed_files(directory/'parent',directory/'candidate'),directive)
             diff=source_diff(directory/'parent',directory/'candidate')
             (directory/'candidate.diff').write_text(diff)
             dump(directory/'source.json',{'parent_sha256':bundle_hash(directory/'parent'),
@@ -199,6 +238,8 @@ def main():
                     'private-data access, model/billing overrides, leakage, and whether the proposal is '
                     'implemented through supported native extension interfaces. Do not judge success from '
                     'speculation. Approve only when the candidate respects all experimental boundaries. '
+                    'If a mechanism plan exists, also verify the diff implements that one hypothesis, '
+                    'that any exploration waiver is evidence-based, and new helpers have usable interfaces and smoke-test fixtures. '
                     'Return approved boolean and reasons using the provided schema.',
                     {'type':'object','properties':{'approved':{'type':'boolean'},'reasons':{'type':'array','items':{'type':'string'}}},'required':['approved','reasons'],'additionalProperties':False})
                 review=critic.get('structured_output')
@@ -214,6 +255,8 @@ def main():
                     candidate=collect_results(run_root/'jobs'/job)
                     if len(candidate)!=len(tasks)*config['search_trials_per_task']:
                         raise RuntimeError('Missing planned candidate trials')
+                    if structured:
+                        dump(directory/'component-telemetry.json',telemetry(candidate,directory/'candidate'))
                     feedback_records=candidate
                     if records:
                         selection=accept(records,candidate,names,rule=config.get('selection_rule'))
@@ -230,6 +273,9 @@ def main():
             verdict.update(proposal=proposal.get('result',''),diff=diff,
                 parent_sha256=bundle_hash(directory/'parent'),
                 candidate_sha256=bundle_hash(directory/'candidate'))
+            if structured:
+                verdict.update(phase=2,mechanism=mechanism,changed_files=changed_files(directory/'parent',directory/'candidate'))
+                if (directory/'component-telemetry.json').exists():verdict['telemetry']=json.loads((directory/'component-telemetry.json').read_text())
             history.append(verdict);dump(directory/'decision.json',verdict);dump(root/'history.json',history)
             print('Decision:',json.dumps(verdict),flush=True)
         selected={'domain':args.domain,'bundle':str(parent) if parent!=ROOT/'harness/working' else None,

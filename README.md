@@ -105,3 +105,19 @@ All four roles use GPT-5.6 Terra with max effort and the existing Codex subscrip
 ## Cached Codex runtime
 
 Prepare the credential-free runtime once with `python src/prepare_codex_runtime.py` after building the pinned Codex role image. It exports Node 22.23.3, Codex 0.154.0, npm, bundled ripgrep and CA certificates into the ignored `work/runtime/` cache. Each task receives the archive from the host and installs offline, with a SHA-256 and version check. Missing or corrupt caches fail before model calls; there is no online installer fallback. The task environment and native Codex conversation loop remain unchanged. This setup change does not rerun any archived trial.
+
+### Chem Luna phase 2: mechanism-first exploration
+
+`config/chem-luna-phase2.json` prepares a separate phase seeded from the frozen
+phase-1 Round 4 candidate and its six audited trials. It is blocked until an
+explicit new round budget is recorded; preparation does not launch model calls.
+The archived phase-1 candidates and decisions remain unchanged.
+
+With `structured_search`, the proposer first returns a structured, evidence-based
+single-hypothesis plan before editing. Prompt-only history or stalled scores
+trigger structural exploration (tool, skill, or memory), or require a reasoned
+waiver. A critic checks consistency with the plan. Candidate records include the
+mechanism, changed files, trial token counts/timestamps and conservative tool-call
+reference telemetry. References do not prove successful execution; absence is not
+proof of nonuse. Native Codex, model/billing boundaries, and official verifiers
+remain fixed. Selection accepts total-score gains and ties.
