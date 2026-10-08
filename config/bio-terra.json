@@ -1,0 +1,55 @@
+{
+  "status": "running",
+  "model_roles": {
+    "policy": "gpt-5.6-terra",
+    "analyst": "claude-sonnet-5-5",
+    "proposer": "claude-sonnet-5-5",
+    "critic": "claude-sonnet-5-5"
+  },
+  "benchmark": {
+    "repository": "https://github.com/Yibo-Wen/as-bench",
+    "commit": "86159f8b9e6ab3ba08777209d095c1415abf97a5"
+  },
+  "design_status": "user_authorized_experiments_2026_10_07",
+  "evolve": [
+    "biology/jewett-lab/biosensor-active-learning",
+    "biology/deepmind/nuclease-active-learning"
+  ],
+  "ood": [],
+  "proposed_trials_per_task": 3,
+  "search_rounds": 5,
+  "candidates_per_round": 1,
+  "acceptance_rule": {
+    "initial": "First complete valid candidate establishes the measured incumbent; no improvement claim against unmeasured H0",
+    "subsequent": "strict pass-rate improvement and no per-task pass-rate regression against accepted local incumbent",
+    "ties": "retain_parent",
+    "no_accepted_candidate": "retain bare H0 as unmeasured; report every measured candidate separately"
+  },
+  "search_compute_budget": {
+    "billing": "existing_codex_subscription_for_policy_and_claude_max_for_roles_only",
+    "paid_api_usd": 0,
+    "extra_usage_required": false,
+    "on_quota_limit": "stop_and_preserve; no_automatic_resume"
+  },
+  "local_baseline_plan": "Do not run H0; user-specified external benchmark reference only",
+  "evolution_unit": "domain",
+  "domains": {
+    "biology": [
+      "biology/jewett-lab/biosensor-active-learning",
+      "biology/deepmind/nuclease-active-learning"
+    ]
+  },
+  "deliverable": "Website documenting actual RSI process, candidate diffs, decisions, performance and costs",
+  "budget_status": "subscription_only_authorized",
+  "search_rounds_scope": "maximum_per_domain",
+  "search_trials_per_task": 3,
+  "final_trials_per_task_per_arm": 0,
+  "experiment_id": "bio-terra-rsi-fresh-20261008",
+  "n_concurrent_trials": 3,
+  "baseline_reference": {},
+  "final_reporting": "Freeze selected source and report its 3 trials per task from evolve; no additional baseline or held-out runs",
+  "policy_runtime": "codex",
+  "initial_acceptance": "First complete valid candidate establishes the measured incumbent; no improvement claim against unmeasured H0",
+  "policy_reasoning_effort": "max",
+  "role_boundary": "You are an RSI role running Sonnet 5.5. The task agent is native Codex with GPT-5.6 Terra, max effort. Use only mounted evidence, parent, candidate; no prior projects, external sources, solutions or credentials. Edit only reusable instructions.md, skills, Python or JavaScript helper tools and task-local memory guidance. Native Codex tools and loop are fixed. Do not add settings.json, hooks, model calls, providers or billing changes. Candidate files live at /opt/rsi-harness. The instruction entry is loaded as native developer instructions. Do not encode exact measured variants, sequences, outcomes or task-specific answer rules. Task constraints and official verifiers are immutable. Do not change foundation-model weights. Respect model safety refusals; do not propose bypasses."
+}

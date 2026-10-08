@@ -33,7 +33,7 @@ def dump(path, value):
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
 
 
-def role(name, directory, prompt, schema=None):
+def role(name, directory, prompt, schema=None, boundary=ROLE_BOUNDARY):
     env, usage = subscription_environment()
     dump(directory/(name+'-usage-before.json'), usage)
     command = ['docker','run','--rm','--name','rsi-'+directory.name+'-'+name,
@@ -49,7 +49,7 @@ def role(name, directory, prompt, schema=None):
         '--effort','high','--output-format','json','--no-session-persistence',
         '--setting-sources','','--strict-mcp-config','--mcp-config','{"mcpServers":{}}',
         '--tools','Read,Write,Edit,Glob,Grep' if name=='proposer' else 'Read,Glob,Grep',
-        '--permission-mode','bypassPermissions','--append-system-prompt',ROLE_BOUNDARY]
+        '--permission-mode','bypassPermissions','--append-system-prompt',boundary]
     if schema:
         command += ['--json-schema',json.dumps(schema)]
     (directory/(name+'-prompt.txt')).write_text(prompt)
@@ -102,8 +102,14 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--domain',choices=['biology','chemistry'],required=True)
     parser.add_argument('--baseline-job')
+    parser.add_argument('--config',type=Path,default=ROOT/'config/experiment.json')
     args=parser.parse_args()
-    config=json.loads((ROOT/'config/experiment.json').read_text())
+    config=json.loads(args.config.read_text())
+    collect_results=collect
+    if config.get('policy_runtime') == 'codex':
+        from codex_evaluation import collect as collect_results
+    def run_role(*a, **kw):
+        return role(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
     run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
     root=run_root/'evolution'/args.domain
     root.mkdir(parents=True,exist_ok=False)
@@ -121,7 +127,7 @@ def main():
             shutil.copytree(parent,directory/'candidate')
             evidence_for(directory,tasks,feedback_records,history)
             dump(directory/'evidence/reference.json',config.get('baseline_reference',{}))
-            analysis=role('analyst',directory,
+            analysis=run_role('analyst',directory,
                 'Read all supplied task instructions, official results and public execution trajectories. '
                 'First round may have no execution records: then analyze the public task requirements, '
                 'explicitly state no baseline was measured, and do not invent observed failures. '
@@ -130,7 +136,7 @@ def main():
                 'Suggest testable reusable harness-mechanism hypotheses, without exact benchmark answers. '
                 'You do not edit files. Return a concise analysis for an independent proposer.')
             (directory/'evidence/analysis.txt').write_text(analysis.get('result',''))
-            proposal=role('proposer',directory,
+            proposal=run_role('proposer',directory,
                 'Read /workspace/evidence (including analysis and prior decisions) and the parent bundle. '
                 'Make one coherent candidate in /workspace/candidate, improving the parent based on evidence. '
                 'You may create reusable tools, skills, context or memory mechanisms supported by the boundary. '
@@ -146,7 +152,7 @@ def main():
                 verdict={'round':number,'accepted':False,'reason':'invalid_or_unchanged_bundle','errors':errors}
             else:
                 (directory/'evidence/proposal.txt').write_text(proposal.get('result',''))
-                critic=role('critic',directory,
+                critic=run_role('critic',directory,
                     'Read the candidate, parent and evidence. Check for benchmark-specific hardcoding, '
                     'private-data access, model/billing overrides, leakage, and whether the proposal is '
                     'implemented through supported native extension interfaces. Do not judge success from '
@@ -161,9 +167,9 @@ def main():
                 else:
                     job=f'{args.domain}-r{number:02d}-search'
                     code=subprocess.run([sys.executable,str(ROOT/'src/run_job.py'),'--name',job,
-                        '--domain',args.domain,'--bundle',str(directory/'candidate'),'--attempts',str(config['search_trials_per_task'])]).returncode
+                        '--domain',args.domain,'--config',str(args.config.resolve()),'--bundle',str(directory/'candidate'),'--attempts',str(config['search_trials_per_task'])]).returncode
                     if code:raise RuntimeError('Evaluation process failed; no automatic retry')
-                    candidate=collect(run_root/'jobs'/job)
+                    candidate=collect_results(run_root/'jobs'/job)
                     if len(candidate)!=len(tasks)*config['search_trials_per_task']:
                         raise RuntimeError('Missing planned candidate trials')
                     feedback_records=candidate
@@ -172,9 +178,9 @@ def main():
                     else:
                         accept(candidate,candidate,names)  # Require complete, normally executed trials.
                         passed=sum(r['reward'] for r in candidate)
-                        selection={'accepted':passed>=3,'rule':'initial_external_reference_threshold',
-                            'reference_percent':33.3,'passes':passed,'trials':len(candidate),
-                            'reason':'above_external_reference' if passed>=3 else 'not_above_external_reference',
+                        selection={'accepted':True if config.get('policy_runtime')=='codex' else passed>=3,'rule':'initial_measured_incumbent' if config.get('policy_runtime')=='codex' else 'initial_external_reference_threshold',
+                            'reference_percent':config.get('baseline_reference',{}).get('reported_percent'),'passes':passed,'trials':len(candidate),
+                            'reason':'first_measured_candidate' if config.get('policy_runtime')=='codex' else ('above_external_reference' if passed>=3 else 'not_above_external_reference'),
                             'paired_local_improvement':False}
                     verdict={'round':number,'job':job,**selection}
                     if verdict['accepted']:

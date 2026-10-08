@@ -11,11 +11,12 @@ from subscription_auth import subscription_environment
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--name', required=True)
+    parser.add_argument('--config', type=Path, default=ROOT/'config/experiment.json')
     parser.add_argument('--domain', choices=['biology','chemistry','all'], required=True)
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--attempts', type=int, default=1)
     args = parser.parse_args()
-    experiment = json.loads((ROOT/'config/experiment.json').read_text())
+    experiment = json.loads(args.config.read_text())
     if experiment.get('budget_status') != 'subscription_only_authorized':
         raise RuntimeError('Subscription-only authorization not recorded')
     if not args.name.replace('-', '').replace('_', '').isalnum():
@@ -26,13 +27,24 @@ def main():
         raise RuntimeError('Job already exists; will not resume or overwrite')
     tasks = experiment['evolve'] if args.domain == 'all' else experiment['domains'][args.domain]
     spec = build('candidate' if args.bundle else 'baseline', tasks[0], args.bundle, args.attempts)
+    if experiment.get('policy_runtime') == 'codex':
+        if not args.bundle: raise ValueError('Bio protocol requires an explicit candidate')
+        from native_bundle import bundle_hash
+        spec['agents'] = [{'import_path': 'native_codex_agent:RSICodex',
+            'model_name': 'gpt-5.6-terra', 'env': {'CODEX_FORCE_AUTH_JSON': '1'},
+            'kwargs': {'version': '0.154.0', 'reasoning_effort': 'max', 'web_search': 'disabled',
+                       'harness_dir': str(args.bundle.resolve()), 'harness_sha256': bundle_hash(args.bundle)}}]
     spec['tasks'] = [{'path': str(ROOT/'external/as-bench/tasks'/task)} for task in tasks]
     spec.update(job_name=args.name, jobs_dir=str(run_root/'jobs'),
         n_concurrent_trials=experiment.get('n_concurrent_trials',2), retry={'max_retries':0})
     from harbor.models.job.config import JobConfig
     from harbor.job import Job
     config = JobConfig(**spec)
-    env, usage = subscription_environment()
+    if experiment.get('policy_runtime') == 'codex':
+        from codex_subscription import codex_subscription_environment
+        env, usage = codex_subscription_environment()
+    else:
+        env, usage = subscription_environment()
     for name in list(os.environ):
         if name not in env:
             del os.environ[name]

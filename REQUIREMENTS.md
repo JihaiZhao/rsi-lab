@@ -61,3 +61,7 @@ The project is RSI Lab, a model-independent RSI framework concept. Sonnet 5.5 is
 ## Authorized round 5 reevaluation
 
 The user explicitly requested rerunning round 5 after OAuth failures. Run a new, separately named batch with the unchanged candidate and three trials per task. Preserve the original six outcomes and stop record. Compare the new complete batch with the retained candidate under the existing selection rule. This adds no proposal or sixth modification round and does not authorize automatic retries or paid billing.
+
+## Fresh Bio RSI (user authorized)
+
+Run the two official Bio tasks directly through RSI, three trials per task and at most five modification rounds, with no local baseline or OOD phase. The task agent uses native Codex 0.154.0 with GPT-5.6 Terra at max effort, using the existing ChatGPT/Codex subscription only. Analyst, proposer and critic remain Sonnet 5.5 under the existing Claude Max subscription. Keep this mixed-model experiment separate from Chem; do not claim all-Terra self-improvement. Start with an empty extension and no earlier trial evidence. The first complete, valid candidate establishes the incumbent without a baseline-improvement claim; later acceptance requires strict aggregate improvement with no per-task regression. Do not transfer Chem's 33.3% reference to Bio. Stop on authentication, quota, model audit or execution errors without automatic retry. Credentials stay outside the repository; the native Harbor bridge injects only runtime auth into the isolated task container, never user settings or memory.
