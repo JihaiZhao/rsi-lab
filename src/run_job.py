@@ -14,6 +14,7 @@ def main():
     parser.add_argument('--config', type=Path, default=ROOT/'config/experiment.json')
     parser.add_argument('--domain', choices=['biology','chemistry','all'], required=True)
     parser.add_argument('--bundle', type=Path)
+    parser.add_argument('--task', help='Run only this exact authorized task')
     parser.add_argument('--attempts', type=int, default=1)
     args = parser.parse_args()
     experiment = json.loads(args.config.read_text())
@@ -26,6 +27,9 @@ def main():
     if destination.exists():
         raise RuntimeError('Job already exists; will not resume or overwrite')
     tasks = experiment['evolve'] if args.domain == 'all' else experiment['domains'][args.domain]
+    if args.task:
+        if args.task not in tasks: raise ValueError('Task is outside authorized domain')
+        tasks = [args.task]
     spec = build('candidate' if args.bundle else 'baseline', tasks[0], args.bundle, args.attempts)
     if experiment.get('policy_runtime') == 'codex':
         from cached_codex_runtime import validate_cache

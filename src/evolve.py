@@ -139,7 +139,11 @@ def main():
         history=json.loads((root/'history.json').read_text())
         if len(history)!=1 or not history[0]['accepted']:
             raise RuntimeError('Expected exactly one accepted round')
-        records=collect_results(run_root/'jobs'/history[0]['job'])
+        if history[0].get('effective_trial_refs'):
+            from repaired_evaluation import collect_refs
+            records=collect_refs(run_root/'jobs', history[0]['effective_trial_refs'], collect_results)
+        else:
+            records=collect_results(run_root/'jobs'/history[0]['job'])
         accept(records,records,names)
         feedback_records=records
         parent=root/f'{args.domain}-round-01/candidate'
