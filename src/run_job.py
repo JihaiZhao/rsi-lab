@@ -31,7 +31,7 @@ def main():
         if not args.bundle: raise ValueError('Bio protocol requires an explicit candidate')
         from native_bundle import bundle_hash
         spec['agents'] = [{'import_path': 'native_codex_agent:RSICodex',
-            'model_name': 'gpt-5.6-terra', 'env': {},
+            'model_name': experiment['model_roles']['policy'], 'env': {},
             'kwargs': {'version': '0.154.0', 'reasoning_effort': 'max', 'web_search': 'disabled',
                        'harness_dir': str(args.bundle.resolve()), 'harness_sha256': bundle_hash(args.bundle)}}]
     spec['tasks'] = [{'path': str(ROOT/'external/as-bench/tasks'/task)} for task in tasks]

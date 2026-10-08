@@ -69,3 +69,7 @@ Run the two official Bio tasks directly through RSI, three trials per task and a
 ## Superseding Bio model correction
 
 The user requires ALL Bio roles (policy, analyst, proposer, critic, and any child agents) to use GPT-5.6 Terra at max effort through the existing Codex subscription only. The mixed-model batches are interrupted and excluded from new evidence. Start from an empty extension in a new experiment. Chem remains unchanged.
+
+## Latest Chem Luna authorization
+
+Run a fresh independent Chem RSI with GPT-5.6 Luna in every role, max effort, native Codex and existing subscription only. Two official Chem tasks, three trials each, at most five modification rounds. Use config/chem-luna.json; empty initial extension, no old candidate or trajectory evidence, no baseline rerun. First valid candidate establishes the measured incumbent; do not treat Sonnet external scores as a Luna baseline. Preserve earlier experiments unchanged.

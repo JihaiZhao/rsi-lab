@@ -4,7 +4,7 @@ from pathlib import Path
 from evaluation import collect as collect_claude
 
 
-def collect(job_dir):
+def collect(job_dir, expected_model='gpt-5.6-terra'):
     rows = collect_claude(job_dir)
     for row in rows:
         path = Path(row['path']) / 'agent'
@@ -30,7 +30,7 @@ def collect(job_dir):
                     pass
         row.update(executed_models=models, reasoning_efforts=efforts,
                    model_audit_error=not contexts or any(
-                       c.get('model') != 'gpt-5.6-terra' or
+                       c.get('model') != expected_model or
                        (c.get('effort') or c.get('reasoning_effort')) != 'max'
                        for c in contexts),
                    api_error=any(e.get('type') in ['error', 'turn.failed'] for e in events),

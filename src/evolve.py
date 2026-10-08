@@ -108,11 +108,15 @@ def main():
     config=json.loads(args.config.read_text())
     collect_results=collect
     if config.get('policy_runtime') == 'codex':
-        from codex_evaluation import collect as collect_results
+        from codex_evaluation import collect as collect_codex
+        def collect_results(path):
+            return collect_codex(path, expected_model=config['model_roles']['policy'])
     role_runner = role
     if config.get('role_runtime') == 'codex':
         from codex_role import role as role_runner
     def run_role(*a, **kw):
+        if config.get('role_runtime') == 'codex':
+            kw['model'] = config['model_roles'][a[0]]
         return role_runner(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
     run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
     root=run_root/'evolution'/args.domain

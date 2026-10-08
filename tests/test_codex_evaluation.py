@@ -9,7 +9,7 @@ from codex_evaluation import collect
 
 
 class CodexAuditTests(unittest.TestCase):
-    def collect_contexts(self, contexts):
+    def collect_contexts(self, contexts, expected_model='gpt-5.6-terra'):
         with tempfile.TemporaryDirectory() as d:
             trial = Path(d) / 'trial'
             sessions = trial / 'agent/sessions'
@@ -20,7 +20,7 @@ class CodexAuditTests(unittest.TestCase):
             (sessions / 'session.jsonl').write_text('\n'.join(json.dumps({
                 'type': 'turn_context', 'payload': c}) for c in contexts))
             (trial / 'agent/codex.txt').write_text('{"type":"turn.completed"}\n')
-            return collect(d)[0]
+            return collect(d, expected_model=expected_model)[0]
 
     def test_exact_model_and_max_pass(self):
         row = self.collect_contexts([{'model': 'gpt-5.6-terra', 'effort': 'max'}])
@@ -38,3 +38,7 @@ class CodexAuditTests(unittest.TestCase):
 
     def test_no_native_context_blocks_selection(self):
         self.assertTrue(self.collect_contexts([])['model_audit_error'])
+
+    def test_luna_audit_does_not_accept_terra(self):
+        self.assertFalse(self.collect_contexts([{"model": "gpt-5.6-luna", "effort": "max"}], "gpt-5.6-luna")["model_audit_error"])
+        self.assertTrue(self.collect_contexts([{"model": "gpt-5.6-terra", "effort": "max"}], "gpt-5.6-luna")["model_audit_error"])
