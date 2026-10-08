@@ -57,3 +57,7 @@ H0 仍为不可变原生 Claude Code，不修改其归档 manifest。
 ## Framework identity
 
 The project is RSI Lab, a model-independent RSI framework concept. Sonnet 5.5 is the fixed backend for the current chemistry experiment, not the framework name. The website must use plain English and explain the actual improvement loop before presenting performance. Other model backends require compatible runtime adapters and have not been validated in this experiment.
+
+## Authorized round 5 reevaluation
+
+The user explicitly requested rerunning round 5 after OAuth failures. Run a new, separately named batch with the unchanged candidate and three trials per task. Preserve the original six outcomes and stop record. Compare the new complete batch with the retained candidate under the existing selection rule. This adds no proposal or sixth modification round and does not authorize automatic retries or paid billing.
