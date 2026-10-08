@@ -29,7 +29,10 @@ def collect(job_dir):
                 except ValueError:
                     pass
         row.update(executed_models=models, reasoning_efforts=efforts,
-                   model_audit_error=models != ['gpt-5.6-terra'] or efforts != ['max'],
+                   model_audit_error=not contexts or any(
+                       c.get('model') != 'gpt-5.6-terra' or
+                       (c.get('effort') or c.get('reasoning_effort')) != 'max'
+                       for c in contexts),
                    api_error=any(e.get('type') in ['error', 'turn.failed'] for e in events),
                    stop_reason='completed' if any(e.get('type') == 'turn.completed' for e in events) else None,
                    error_message=None)
