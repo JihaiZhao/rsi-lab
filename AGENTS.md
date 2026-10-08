@@ -31,3 +31,7 @@ Read README.md and REQUIREMENTS.md before making changes.
 ## Latest Bio authorization
 
 The user additionally authorized a fresh Bio-only RSI experiment with GPT-5.6 Terra (max) as the task policy through existing Codex subscription, two tasks × three trials, at most five modification rounds, no baseline rerun. Sonnet-only role constraints still apply to analyst, proposer and critic. Use config/bio-terra.json and isolated evidence; do not modify the archived Chem H0 or inherit its candidates. No paid API, extra credits or implicit retries.
+
+## Superseding Bio model correction
+
+The user requires ALL Bio roles (policy, analyst, proposer, critic, and any child agents) to use GPT-5.6 Terra at max effort through the existing Codex subscription only. The mixed-model batches are interrupted and excluded from new evidence. Start from an empty extension in a new experiment. Chem remains unchanged.

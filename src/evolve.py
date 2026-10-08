@@ -108,8 +108,11 @@ def main():
     collect_results=collect
     if config.get('policy_runtime') == 'codex':
         from codex_evaluation import collect as collect_results
+    role_runner = role
+    if config.get('role_runtime') == 'codex':
+        from codex_role import role as role_runner
     def run_role(*a, **kw):
-        return role(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
+        return role_runner(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
     run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
     root=run_root/'evolution'/args.domain
     root.mkdir(parents=True,exist_ok=False)

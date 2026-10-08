@@ -2,7 +2,7 @@
 
 RSI Lab explores whether an agent can improve its own workflow by proposing changes, testing them, and learning from the results.
 
-The idea is independent of a particular model. **The implementation in this repository currently runs Sonnet 5.5 through native Claude Code.** Other model backends need runtime adapters and have not been validated here.
+The idea is independent of a particular model. **Chem uses Sonnet 5.5 through native Claude Code. Bio uses GPT-5.6 Terra at max effort through native Codex for every role.** The Bio adapter is undergoing its first experimental run; other backends require adapters.
 
 [Website](https://jihaizhao.github.io/rsi-lab/) · [AS-Bench](https://github.com/Yibo-Wen/as-bench) · [Method inspiration: RRSI](https://regularized-rsi.com/)
 
@@ -97,3 +97,7 @@ Open `http://localhost:8766`. The site is plain HTML, CSS and JavaScript; it nee
 The AS-Bench checkout is pinned in the experiment configuration and is not vendored here. The archived Harbor adapter retains its upstream license in `reference/harbor/LICENSE`. See `REQUIREMENTS.md` for the recorded experiment requirements.
 
 The public website is deployed by `.github/workflows/pages.yml`. Pushing changes to `website/dist/` on `main` publishes the updated snapshot to GitHub Pages; it does not run experiments in GitHub Actions.
+
+## Bio experiment
+
+All four roles use GPT-5.6 Terra with max effort and the existing Codex subscription. Two official Bio tasks, three trials each, at most five modification rounds. No baseline rerun or external reference. Mixed-model interrupted batches are preserved and excluded. Build `infrastructure/codex-roles.Dockerfile` as `rsi-terra-roles:0.154.0`, then run `python src/evolve.py --domain biology --config config/bio-terra.json`. Role events stream to local logs, and model/effort are checked against native session records before advancing.
