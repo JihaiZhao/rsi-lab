@@ -28,6 +28,8 @@ def main():
     tasks = experiment['evolve'] if args.domain == 'all' else experiment['domains'][args.domain]
     spec = build('candidate' if args.bundle else 'baseline', tasks[0], args.bundle, args.attempts)
     if experiment.get('policy_runtime') == 'codex':
+        from cached_codex_runtime import validate_cache
+        validate_cache()
         if not args.bundle: raise ValueError('Bio protocol requires an explicit candidate')
         from native_bundle import bundle_hash
         spec['agents'] = [{'import_path': 'native_codex_agent:RSICodex',

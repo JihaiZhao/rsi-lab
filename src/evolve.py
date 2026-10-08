@@ -108,6 +108,8 @@ def main():
     config=json.loads(args.config.read_text())
     collect_results=collect
     if config.get('policy_runtime') == 'codex':
+        from cached_codex_runtime import validate_cache
+        validate_cache()
         from codex_evaluation import collect as collect_codex
         def collect_results(path):
             return collect_codex(path, expected_model=config['model_roles']['policy'])

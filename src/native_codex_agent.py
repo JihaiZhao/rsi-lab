@@ -1,4 +1,4 @@
-"""Fixed Terra bridge; retain Harbor's native Codex.run conversation/tool loop."""
+"""Fixed native Codex bridge; retain Harbor's native Codex.run conversation/tool loop."""
 from pathlib import Path
 from harbor.agents.installed.codex import Codex
 from native_bundle import bundle_hash, validate_bundle
@@ -28,6 +28,10 @@ class RSICodex(Codex):
         }
         kwargs['skills_dir'] = '/opt/rsi-harness/skills'
         super().__init__(logs_dir=logs_dir, **kwargs)
+
+    async def install(self, environment):
+        from cached_codex_runtime import install_cached_runtime
+        await install_cached_runtime(environment, self.logs_dir)
 
     async def setup(self, environment):
         await super().setup(environment)

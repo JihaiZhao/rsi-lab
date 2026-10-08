@@ -101,3 +101,7 @@ The public website is deployed by `.github/workflows/pages.yml`. Pushing changes
 ## Bio experiment
 
 All four roles use GPT-5.6 Terra with max effort and the existing Codex subscription. Two official Bio tasks, three trials each, at most five modification rounds. No baseline rerun or external reference. Mixed-model interrupted batches are preserved and excluded. Build `infrastructure/codex-roles.Dockerfile` as `rsi-terra-roles:0.154.0`, then run `python src/evolve.py --domain biology --config config/bio-terra.json`. Role events stream to local logs, and model/effort are checked against native session records before advancing.
+
+## Cached Codex runtime
+
+Prepare the credential-free runtime once with `python src/prepare_codex_runtime.py` after building the pinned Codex role image. It exports Node 22.23.3, Codex 0.154.0, npm, bundled ripgrep and CA certificates into the ignored `work/runtime/` cache. Each task receives the archive from the host and installs offline, with a SHA-256 and version check. Missing or corrupt caches fail before model calls; there is no online installer fallback. The task environment and native Codex conversation loop remain unchanged. This setup change does not rerun any archived trial.
