@@ -44,7 +44,7 @@
   "search_rounds_scope": "maximum_per_domain",
   "search_trials_per_task": 3,
   "final_trials_per_task_per_arm": 0,
-  "experiment_id": "bio-terra-all-roles-20261008-01",
+  "experiment_id": "bio-terra-all-roles-20261008-02",
   "n_concurrent_trials": 3,
   "baseline_reference": {},
   "final_reporting": "Freeze selected source and report its 3 trials per task from evolve; no additional baseline or held-out runs",
