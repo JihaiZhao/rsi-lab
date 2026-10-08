@@ -102,6 +102,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--domain',choices=['biology','chemistry'],required=True)
     parser.add_argument('--baseline-job')
+    parser.add_argument('--resume-after-round1', action='store_true', help='Explicit authorized continuation after recorded Round 1 reevaluation')
     parser.add_argument('--config',type=Path,default=ROOT/'config/experiment.json')
     args=parser.parse_args()
     config=json.loads(args.config.read_text())
@@ -115,16 +116,33 @@ def main():
         return role_runner(*a, **kw, boundary=config.get('role_boundary',ROLE_BOUNDARY))
     run_root=ROOT/'runs/experiments'/config['experiment_id'] if config.get('experiment_id') else ROOT/'runs'
     root=run_root/'evolution'/args.domain
-    root.mkdir(parents=True,exist_ok=False)
-    dump(root/'protocol.json',config)
+    if not args.resume_after_round1:
+        root.mkdir(parents=True,exist_ok=False)
+        dump(root/'protocol.json',config)
     tasks=config['domains'][args.domain];names=[Path(p).name for p in tasks]
     records=[r for r in collect(run_root/'jobs'/args.baseline_job) if r['task'] in names] if args.baseline_job else []
     if records:accept(records,records,names)
     feedback_records=records
     parent=ROOT/'harness/working'
     history=[]
+    start_round=1
+    if args.resume_after_round1:
+        authorization=json.loads((root/'round-01-reevaluation.json').read_text())
+        if authorization.get('status') != 'complete':
+            raise RuntimeError('Complete authorized reevaluation required')
+        history=json.loads((root/'history.json').read_text())
+        if len(history)!=1 or not history[0]['accepted']:
+            raise RuntimeError('Expected exactly one accepted round')
+        records=collect_results(run_root/'jobs'/history[0]['job'])
+        accept(records,records,names)
+        feedback_records=records
+        parent=root/f'{args.domain}-round-01/candidate'
+        if bundle_hash(parent)!=history[0]['candidate_sha256']:
+            raise RuntimeError('Round 1 candidate changed')
+        (root/'continuation-started.json').open('x').write(json.dumps({'authorized':True,'start_round':2}))
+        start_round=2
     try:
-        for number in range(1,config['search_rounds']+1):
+        for number in range(start_round,config['search_rounds']+1):
             directory=root/f'{args.domain}-round-{number:02d}';directory.mkdir()
             shutil.copytree(parent,directory/'parent')
             shutil.copytree(parent,directory/'candidate')
@@ -197,7 +215,7 @@ def main():
                   'sha256':bundle_hash(parent),'history':history,'frozen_at':datetime.now(timezone.utc).isoformat()}
         dump(root/'selected.json',selected)
     except BaseException as error:
-        dump(root/'stopped.json',{'type':type(error).__name__,'message':str(error),
+        dump(root/('continuation-stopped.json' if args.resume_after_round1 else 'stopped.json'),{'type':type(error).__name__,'message':str(error),
             'at':datetime.now(timezone.utc).isoformat(),'automatic_resume':False})
         raise
 
