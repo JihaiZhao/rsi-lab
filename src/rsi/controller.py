@@ -86,6 +86,10 @@ class Experiment:
         self.task_texts = [(self.task_root/t/'instruction.md').read_text() for t in self.tasks]
         self.boundary = boundary(self.config, self.capabilities)
 
+    def preflight(self):
+        self.roles.preflight(self.config['runtimes']['roles'])
+        self.policy.preflight(self.config['runtimes']['policy'])
+
     # ---- records -------------------------------------------------------------------------
     def log(self, event, **fields):
         with (self.root/'ledger.jsonl').open('a') as f:
@@ -152,6 +156,9 @@ class Experiment:
     def run(self):
         if not authorized(self.config):
             raise RuntimeError('Experiment config is not authorized to spend subscription quota')
+        if self.root.exists():
+            raise RuntimeError('Experiment already exists; it is never resumed. Use a new experiment_id')
+        self.preflight()
         self.root.mkdir(parents=True, exist_ok=False)
         dump(self.root/'protocol.json', self.config)
         parent = ROOT/self.config.get('initial_bundle', 'harness/working')

@@ -20,6 +20,11 @@ def subscription(model):
     return env, usage
 
 
+def preflight(runtime):
+    """Fails before anything is created when the login or quota is unusable."""
+    subscription(runtime['model'])
+
+
 def run_role(name, directory, prompt, *, runtime, boundary, writable=False, schema=None):
     """One isolated, non-persistent role call. Raises on any error; never retries."""
     env, usage = subscription(runtime['model'])

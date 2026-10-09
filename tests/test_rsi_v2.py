@@ -280,7 +280,7 @@ class ControllerTests(unittest.TestCase):
                     return [row(t, int(self.pending[t] > 0), name, path=str(d)) for t in TASKS]
                 rest = {t: self.pending[t]-int(self.pending[t] > 0) for t in TASKS}
                 return [row(t, int(i < rest[t]), f'{name}-{i}', path=str(d)) for t in TASKS for i in range(attempts)]
-            exp.role, exp.evaluate = role, evaluate
+            exp.role, exp.evaluate, exp.preflight = role, evaluate, lambda: None
             exp.run()
             history = json.loads((exp.root/'history.json').read_text())
             self.assertEqual([h['reason'] for h in history],

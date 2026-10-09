@@ -5,6 +5,11 @@ CAPABILITIES = Capabilities('codex', ('instructions', 'skill', 'tool', 'mcp', 'm
     notes='Lifecycle hooks are not loaded by the pinned Codex bridge.')
 
 
+def preflight(runtime):
+    """Fails before anything is created when the login or runtime cache is unusable."""
+    policy_environment(runtime)
+
+
 def run_role(name, directory, prompt, *, runtime, boundary, writable=False, schema=None):
     from codex_role import role
     if runtime.get('effort', 'max') != 'max':
