@@ -73,3 +73,10 @@ The user requires ALL Bio roles (policy, analyst, proposer, critic, and any chil
 ## Latest Chem Luna authorization
 
 Run a fresh independent Chem RSI with GPT-5.6 Luna in every role, max effort, native Codex and existing subscription only. Two official Chem tasks, three trials each, at most five modification rounds. Use config/chem-luna.json; empty initial extension, no old candidate or trajectory evidence, no baseline rerun. First valid candidate establishes the measured incumbent; do not treat Sonnet external scores as a Luna baseline. Preserve earlier experiments unchanged.
+
+## Framework v2 Chem Sonnet run (authorized 2026-10-09)
+
+The user authorized a fresh run of framework v2 (docs/DESIGN.md) with config/chem-sonnet-v2.json:
+Sonnet 5.5 for policy and every role, the two official Chem tasks, at most five rounds, cascade
+evaluation (1 screen trial per task, top-up to 3), pre-registered noise-aware selection, existing
+Claude Max subscription only, no local H0 rerun and no evidence from earlier experiments.

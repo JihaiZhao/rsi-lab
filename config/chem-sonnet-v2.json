@@ -1,8 +1,8 @@
 {
   "framework": "rsi-v2 (docs/DESIGN.md)",
   "experiment_id": "chem-sonnet-v2-20261009",
-  "status": "draft",
-  "budget_status": "pending_user_authorization",
+  "status": "authorized",
+  "budget_status": "subscription_only_authorized",
   "benchmark": {
     "repository": "https://github.com/Yibo-Wen/as-bench",
     "commit": "86159f8b9e6ab3ba08777209d095c1415abf97a5"
@@ -12,15 +12,31 @@
     "chemistry/pfizer/suzuki-condition-screen"
   ],
   "runtimes": {
-    "policy": {"adapter": "claude_code", "model": "claude-sonnet-5-5", "effort": "high", "version": "2.1.293"},
-    "roles": {"adapter": "claude_code", "model": "claude-sonnet-5-5", "effort": "high", "image": "rsi-sonnet-roles:2.1.293"}
+    "policy": {
+      "adapter": "claude_code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "version": "2.1.293"
+    },
+    "roles": {
+      "adapter": "claude_code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "image": "rsi-sonnet-roles:2.1.293"
+    }
   },
   "single_model": true,
   "initial_bundle": "harness/working",
   "rounds": 5,
   "trials_per_task": 3,
   "screen_trials_per_task": 1,
-  "edit_budget": [2, 2, 1, 1, 1],
+  "edit_budget": [
+    2,
+    2,
+    1,
+    1,
+    1
+  ],
   "max_repairs": 3,
   "selection": {
     "delta": 0.16666666666666666,
@@ -41,5 +57,6 @@
     "source": "user-specified benchmark reference",
     "paired_local_baseline": false
   },
-  "reporting": "Evolve-set scores only. No local H0 rerun, no OOD set, no generalization claim."
+  "reporting": "Evolve-set scores only. No local H0 rerun, no OOD set, no generalization claim.",
+  "authorization": "User authorized this fresh v2 Chem run on 2026-10-09: Sonnet 5.5 in every role, 2 tasks, 5 rounds, cascade 1+2 trials per task, Max subscription only, no H0 rerun."
 }
