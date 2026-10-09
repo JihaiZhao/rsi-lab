@@ -65,6 +65,7 @@ Portable bundle format (runtime root {portable.RUNTIME_ROOT}); supported here: {
 - smoke.json [{{"name", "command", "args", "stdin", "expect_exit", "timeout"}}]: required for tools, MCP or hooks.
   The gate runs smoke tests, an MCP initialize/tools-list probe and each hook with a synthetic event,
   offline with no network and no credentials.
+To delete a file, overwrite it with empty content; the controller removes empty files (not instructions.md).
 Only .md, .py, .js and .json files. No network access, model calls, provider or billing changes.
 Do not encode measured designs, answers, task identity dispatch or hidden outcomes. Text copied verbatim
 from task instructions is rejected. Fitting statistical models to permitted in-episode measurements is
@@ -99,7 +100,8 @@ class Experiment:
         self.log('role_start', round=directory.name, role=name)
         result = self.roles.run_role(name, directory, prompt, runtime=self.config['runtimes']['roles'],
                                      boundary=self.boundary, writable=writable, schema=schema)
-        self.log('role_done', round=directory.name, role=name, usage=result.get('usage'))
+        removed = portable.apply_deletions(directory/'candidate') if writable else []
+        self.log('role_done', round=directory.name, role=name, usage=result.get('usage'), deleted=removed)
         return result
 
     def evaluate(self, name, bundle, attempts):

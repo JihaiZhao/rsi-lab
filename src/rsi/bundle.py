@@ -165,6 +165,18 @@ def mcp_servers(folder):
             for name, s in sorted(read_mcp(folder).items())]
 
 
+def apply_deletions(folder):
+    """Role file tools cannot delete; an emptied file (other than instructions.md) means delete."""
+    folder = Path(folder)
+    removed = [f for f in files(folder) if f != 'instructions.md' and not (folder/f).read_bytes().strip()]
+    for rel in removed:
+        (folder/rel).unlink()
+    for path in sorted(folder.rglob('*'), key=lambda p: -len(p.parts)):
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    return removed
+
+
 def changed_files(parent, candidate):
     paths = set(files(parent)) | set(files(candidate))
     read = lambda root, p: (Path(root)/p).read_bytes() if (Path(root)/p).is_file() else None
@@ -182,4 +194,4 @@ def diff(parent, candidate):
 
 
 __all__ = ['bundle_hash', 'validate', 'components', 'complexity', 'files', 'component_of',
-           'claude_settings', 'mcp_servers', 'changed_files', 'diff', 'entry_prompt', 'read_smoke', 'read_hooks', 'read_mcp']
+           'claude_settings', 'mcp_servers', 'changed_files', 'diff', 'apply_deletions', 'entry_prompt', 'read_smoke', 'read_hooks', 'read_mcp']

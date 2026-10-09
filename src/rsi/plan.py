@@ -64,9 +64,14 @@ def validate(plan, budget, capabilities, guidance):
 
 
 def validate_implementation(plan, changed):
-    """Changed files must be declared, and every declared component must really change."""
+    """Changes must belong to a planned component, and every planned component must really change.
+
+    Support files (fixtures, helpers) inside a planned component do not need to be listed one by one.
+    """
     declared = {f for e in plan['edits'] for f in e['files']}
-    errors = [f'Undeclared change: {f}' for f in changed if f not in declared | SUPPORT_FILES]
+    planned = {e['component'] for e in plan['edits']}
+    errors = [f'Undeclared change: {f}' for f in changed
+              if f not in declared | SUPPORT_FILES and portable.component_of(f) not in planned]
     changed_components = {portable.component_of(f) for f in changed}
     for edit in plan['edits']:
         if edit['component'] not in changed_components:

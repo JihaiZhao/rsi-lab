@@ -14,7 +14,8 @@ from rsi import bundle as portable
 NGRAM = 8
 SECRET_PATTERNS = [r'sk-ant-[A-Za-z0-9_-]{10,}', r'sk-[A-Za-z0-9]{20,}', r'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}',
                    r'CLAUDE_CODE_OAUTH_TOKEN\s*=', r'OPENAI_API_KEY\s*=', r'ANTHROPIC_API_KEY\s*=']
-LITERAL_COMPOSITION = r'\b[A-Z][a-z]?-0\.\d+(?:-[A-Z][a-z]?-0\.\d+)+'
+# No leading \b: inside JSON strings a literal often follows an escape such as \n.
+LITERAL_COMPOSITION = r'[A-Z][a-z]?-0\.\d+(?:-[A-Z][a-z]?-0\.\d+)+'
 # Path-shaped only: words like "solution" are ordinary chemistry vocabulary.
 FORBIDDEN_REFERENCES = [r'/(tests?|solutions?)/', r'\b(solve|solution)\.(sh|py)\b', r'\breward\.(txt|json)\b',
                         r'api\.anthropic\.com', r'api\.openai\.com', r'\bhttps?://']

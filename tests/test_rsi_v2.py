@@ -70,6 +70,15 @@ class BundleTests(unittest.TestCase):
             self.assertTrue(any('under /opt/rsi-harness' in e for e in errors))
             self.assertTrue(any('smoke.json' in e for e in errors))
 
+    def test_emptied_files_are_deleted_but_instructions_stay(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'instructions.md', '')
+            write(d, 'tools/fixtures/x.js', '  \n')
+            write(d, 'tools/a.py', 'print(1)\n')
+            self.assertEqual(portable.apply_deletions(d), ['tools/fixtures/x.js'])
+            self.assertEqual(portable.files(d), ['instructions.md', 'tools/a.py'])
+            self.assertFalse((Path(d)/'tools/fixtures').exists())
+
     def test_mcp_servers_are_portable(self):
         with tempfile.TemporaryDirectory() as d:
             write(d, 'mcp/servers.json', {'calc': {'command': 'python3', 'args': ['/opt/rsi-harness/mcp/calc.py']}})
@@ -85,9 +94,11 @@ class GateTests(unittest.TestCase):
             self.assertEqual(gate.leakage(d, [task]), [])
             write(d, 'memory/a.md', 'design dilute copper alloy electrocatalysts for carbon dioxide conversion')
             write(d, 'memory/b.md', 'token sk-ant-abcdefghijklmnop')
+            write(d, 'smoke.json', [{'stdin': 'item\nCu-0.98-In-0.02,1'}])
             kinds = {(f['file'], f['kind']) for f in gate.leakage(d, [task])}
             self.assertIn(('memory/a.md', 'task_text_overlap'), kinds)
             self.assertIn(('memory/b.md', 'credential_pattern'), kinds)
+            self.assertIn(('smoke.json', 'literal_composition'), kinds)
 
     def test_smoke_runs_tests_mcp_probe_and_hooks(self):
         calls = []
@@ -168,6 +179,7 @@ class PlanAndEvidenceTests(unittest.TestCase):
         one = self.plan(('tool', 'tools/a.py'))
         self.assertEqual(contract.validate_implementation(one, ['tools/a.py', 'smoke.json', 'instructions.md']), [])
         self.assertIn('Undeclared change: memory/x.md', contract.validate_implementation(one, ['tools/a.py', 'memory/x.md']))
+        self.assertEqual(contract.validate_implementation(one, ['tools/a.py', 'tools/fixtures/model.js']), [])
         self.assertIn('Planned tool edit has no matching file change', contract.validate_implementation(one, ['instructions.md']))
         history = [{'trials': 6, 'accepted': False, 'reason': 'regression', 'components_changed': ['instructions']},
                    {'trials': 6, 'accepted': False, 'reason': 'unresolved_in_noise_band', 'components_changed': ['instructions']}]
