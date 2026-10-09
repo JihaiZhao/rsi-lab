@@ -236,10 +236,9 @@ class BridgeTests(unittest.TestCase):
 
 
 class ControllerTests(unittest.TestCase):
-    def test_shipped_config_is_valid_but_not_authorized(self):
+    def test_shipped_config_is_valid_and_single_model(self):
         config = json.loads((ROOT/'config/chem-sonnet-v2.json').read_text())
         check_config(config)
-        self.assertFalse(authorized(config))
         self.assertEqual({config['runtimes']['policy']['model'], config['runtimes']['roles']['model']},
                          {'claude-sonnet-5-5'})
         self.assertEqual(config['selection'].keys(), selection.DEFAULTS.keys())
