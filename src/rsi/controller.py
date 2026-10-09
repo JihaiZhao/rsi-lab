@@ -59,7 +59,7 @@ Portable bundle format (runtime root {portable.RUNTIME_ROOT}); supported here: {
 - skills/<name>/SKILL.md plus helper files: native skills.
 - tools/*.py|*.js: helper programs the agent may run.
 - mcp/servers.json {{"name": {{"command": "python3", "args": ["{portable.RUNTIME_ROOT}/mcp/x.py"]}}}}: stdio MCP tools.
-- hooks.json {{"session_start|pre_tool|post_tool|stop": [{{"command": "python3", "args": [...], "matcher": "Bash", "timeout": 30}}]}}:
+- hooks.json (scripts in hooks/ or tools/) {{"session_start|pre_tool|post_tool|stop": [{{"command": "python3", "args": [...], "matcher": "Bash", "timeout": 30}}]}}:
   lifecycle hooks; JSON event on stdin; exit 2 blocks with stderr fed back to the agent.
 - memory/: task-local memory scaffolding and notes conventions.
 - smoke.json [{{"name", "command", "args", "stdin", "expect_exit", "timeout"}}]: required for tools, MCP or hooks.
@@ -132,7 +132,7 @@ class Experiment:
         for attempt in range(self.config['max_repairs']+1):
             changed = portable.changed_files(directory/'parent', candidate)
             report = gate.run(candidate, self.capabilities, self.task_texts, self.config['smoke_image'])
-            report['errors'] += contract.validate_implementation(plan, changed)
+            report['errors'] += contract.validate_implementation(plan, changed, candidate)
             report['passed'] = not report['errors']
             dump(directory/f'gate-{attempt}.json', report)
             self.log('gate', round=directory.name, attempt=attempt, passed=report['passed'])

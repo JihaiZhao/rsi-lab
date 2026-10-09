@@ -20,7 +20,18 @@ def component_of(path):
     """Map a bundle-relative path to its component; None for support files."""
     head = path.split('/')[0]
     return {'instructions.md': 'instructions', 'skills': 'skill', 'tools': 'tool',
-            'mcp': 'mcp', 'hooks.json': 'hook', 'memory': 'memory'}.get(head)
+            'mcp': 'mcp', 'hooks.json': 'hook', 'hooks': 'hook', 'memory': 'memory'}.get(head)
+
+
+def referenced_scripts(folder):
+    """Bundle-relative scripts launched by hooks or MCP servers, keyed to that component."""
+    refs = {}
+    for entries in read_hooks(folder).values():
+        for entry in entries:
+            refs[entry['args'][0][len(RUNTIME_ROOT)+1:]] = 'hook'
+    for server in read_mcp(folder).values():
+        refs[server['args'][0][len(RUNTIME_ROOT)+1:]] = 'mcp'
+    return refs
 
 
 def files(folder):

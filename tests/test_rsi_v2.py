@@ -186,6 +186,12 @@ class PlanAndEvidenceTests(unittest.TestCase):
         self.assertEqual(contract.validate_implementation(one, ['tools/a.py', 'smoke.json', 'instructions.md']), [])
         self.assertIn('Undeclared change: memory/x.md', contract.validate_implementation(one, ['tools/a.py', 'memory/x.md']))
         self.assertEqual(contract.validate_implementation(one, ['tools/a.py', 'tools/fixtures/model.js']), [])
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'hooks.json', {'stop': [{'command': 'python3', 'args': ['/opt/rsi-harness/tools/audit.py']}]})
+            hook = self.plan(('hook', 'hooks.json'))
+            self.assertEqual(contract.validate_implementation(hook, ['hooks.json', 'tools/audit.py', 'smoke.json'], d), [])
+            self.assertTrue(contract.validate_implementation(hook, ['hooks.json', 'tools/other.py'], d))
+        self.assertEqual(portable.component_of('hooks/audit.py'), 'hook')
         self.assertIn('Planned tool edit has no matching file change', contract.validate_implementation(one, ['instructions.md']))
         history = [{'trials': 6, 'accepted': False, 'reason': 'regression', 'components_changed': ['instructions']},
                    {'trials': 6, 'accepted': False, 'reason': 'unresolved_in_noise_band', 'components_changed': ['instructions']}]
