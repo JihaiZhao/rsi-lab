@@ -21,7 +21,7 @@ def write(root, rel, text):
 
 
 def row(task, reward, i, path='/nonexistent', tokens=1000):
-    return {'task': task, 'trial': f'{task}__{i}', 'reward': reward, 'exception': None, 'model_audit_error': False,
+    return {'task': task, 'trial': f'{task}__{i}', 'reward': float(reward), 'exception': None, 'model_audit_error': False,
             'api_error': False, 'agent_result': {'n_input_tokens': tokens, 'n_output_tokens': 0}, 'path': path}
 
 
@@ -126,6 +126,12 @@ class SelectionTests(unittest.TestCase):
         for s1, s0 in [(4, 2), (3, 3), (6, 0), (1, 5)]:
             mc = sum(rng.betavariate(1+s1, 7-s1) > rng.betavariate(1+s0, 7-s0) for _ in range(40000))/40000
             self.assertAlmostEqual(selection.p_superior(s1, 6, s0, 6), mc, delta=0.01)
+
+    def test_float_rewards_from_harbor(self):
+        parent = [{**r, 'reward': float(r['reward'])} for r in rows({TASKS[0]: 1, TASKS[1]: 1})]
+        candidate = [{**r, 'reward': float(r['reward'])} for r in rows({TASKS[0]: 2, TASKS[1]: 2})]
+        self.assertEqual(selection.decide(parent, candidate, best_score=2/6, incumbent_complexity=1,
+                                          candidate_complexity=1)['reason'], 'credible_gain')
 
     def test_first_candidate_becomes_measured_incumbent(self):
         d = selection.decide([], rows({TASKS[0]: 0, TASKS[1]: 0}), best_score=None,

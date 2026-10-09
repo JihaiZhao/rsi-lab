@@ -39,6 +39,7 @@ def _lbeta(a, b):
 
 def p_superior(s1, n1, s0, n0):
     """Exact P(p1 > p0) for independent Beta(1+s, 1+n-s) posteriors (uniform prior)."""
+    s1, s0 = round(s1), round(s0)  # Harbor reports binary rewards as floats.
     a1, b1, a0, b0 = 1+s1, 1+n1-s1, 1+s0, 1+n0-s0
     return sum(exp(_lbeta(a0+i, b0+b1)-log(b1+i)-_lbeta(1+i, b1)-_lbeta(a0, b0)) for i in range(a1))
 
