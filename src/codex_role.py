@@ -9,7 +9,9 @@ from codex_subscription import codex_subscription_environment
 MODEL = 'gpt-5.6-terra'
 
 
-def role(name, directory, prompt, schema=None, boundary='', model=MODEL):
+def role(name, directory, prompt, schema=None, boundary='', model=MODEL, writable=None):
+    if writable is None:
+        writable = name == 'proposer'
     env, usage = codex_subscription_environment()
     directory = directory.resolve()
     auth_path = Path.home() / '.codex/auth.json'
@@ -31,7 +33,7 @@ def role(name, directory, prompt, schema=None, boundary='', model=MODEL):
         '-v', f'{output}/sessions:/tmp/codex-home/sessions:rw',
         '-v', f'{output}:/role-output:rw']
     for folder in ['evidence', 'parent', 'candidate']:
-        mode = 'rw' if folder == 'candidate' and name == 'proposer' else 'ro'
+        mode = 'rw' if folder == 'candidate' and writable else 'ro'
         command += ['-v', f'{directory / folder}:/workspace/{folder}:{mode}']
     if schema:
         (output / 'schema.json').write_text(json.dumps(schema))

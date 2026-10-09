@@ -98,6 +98,26 @@ The AS-Bench checkout is pinned in the experiment configuration and is not vendo
 
 The public website is deployed by `.github/workflows/pages.yml`. Pushing changes to `website/dist/` on `main` publishes the updated snapshot to GitHub Pages; it does not run experiments in GitHub Actions.
 
+## Framework v2 (model- and harness-independent)
+
+`src/rsi/` is a new controller that never names a model or CLI. Runtimes are adapters
+(`claude_code`, `codex`), each with a capability list. Candidates use one portable bundle
+format: `instructions.md`, `skills/`, `tools/`, `mcp/servers.json` (stdio MCP tools),
+`hooks.json` (neutral lifecycle hooks, compiled to Claude Code settings), `memory/`, and
+`smoke.json`. Each round runs analyst → structured plan → implementation → offline gate
+(static checks, leakage scan, sandboxed smoke tests with no network or credentials) and
+critic, with a bounded repair loop, before any trial. Evaluation is a pre-registered
+cascade (1 screen trial per task, then top-up to 3), and selection uses a noise band,
+a Beta posterior and a simplicity/cost tie-break. Every candidate, trial card and raw
+trajectory is archived for later rounds. See `docs/DESIGN.md`.
+
+```bash
+python src/rsi_run.py --config config/chem-sonnet-v2.json --check   # offline, no model calls
+```
+
+`config/chem-sonnet-v2.json` is a draft and is not authorized to run. Earlier experiments
+and `src/evolve.py` are unchanged.
+
 ## Bio experiment
 
 All four roles use GPT-5.6 Terra with max effort and the existing Codex subscription. Two official Bio tasks, three trials each, at most five modification rounds. No baseline rerun or external reference. Mixed-model interrupted batches are preserved and excluded. Build `infrastructure/codex-roles.Dockerfile` as `rsi-terra-roles:0.154.0`, then run `python src/evolve.py --domain biology --config config/bio-terra.json`. Role events stream to local logs, and model/effort are checked against native session records before advancing.

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 
-def collect(job_dir):
+def collect(job_dir, expected_model='claude-sonnet-5-5'):
     records = []
     for path in sorted(Path(job_dir).glob('*/result.json')):
         value = json.loads(path.read_text())
@@ -28,7 +28,7 @@ def collect(job_dir):
             if event.get('type')=='assistant' and event.get('message',{}).get('model') not in (None,'<synthetic>')})
         models=sorted(set(models) | {model for event in native_events
             if event.get('type')=='result' for model in (event.get('modelUsage') or {})})
-        model_error=not models or any(model!='claude-sonnet-5-5' for model in models)
+        model_error=not models or any(model!=expected_model for model in models)
         api_error=any(event.get('type')=='result' and event.get('is_error') for event in native_events)
         last_result=next((e for e in reversed(native_events) if e.get('type')=='result'),{})
         exception=value.get('exception_info')

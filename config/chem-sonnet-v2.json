@@ -1,0 +1,45 @@
+{
+  "framework": "rsi-v2 (docs/DESIGN.md)",
+  "experiment_id": "chem-sonnet-v2-20261009",
+  "status": "draft",
+  "budget_status": "pending_user_authorization",
+  "benchmark": {
+    "repository": "https://github.com/Yibo-Wen/as-bench",
+    "commit": "86159f8b9e6ab3ba08777209d095c1415abf97a5"
+  },
+  "tasks": [
+    "chemistry/sargent-lab/propylene-active-learning",
+    "chemistry/pfizer/suzuki-condition-screen"
+  ],
+  "runtimes": {
+    "policy": {"adapter": "claude_code", "model": "claude-sonnet-5-5", "effort": "high", "version": "2.1.293"},
+    "roles": {"adapter": "claude_code", "model": "claude-sonnet-5-5", "effort": "high", "image": "rsi-sonnet-roles:2.1.293"}
+  },
+  "single_model": true,
+  "initial_bundle": "harness/working",
+  "rounds": 5,
+  "trials_per_task": 3,
+  "screen_trials_per_task": 1,
+  "edit_budget": [2, 2, 1, 1, 1],
+  "max_repairs": 3,
+  "selection": {
+    "delta": 0.16666666666666666,
+    "p_accept": 0.8,
+    "token_saving": 0.15,
+    "screen_stop_if_zero_and_incumbent_at_least": 0.5
+  },
+  "smoke_image": "asbrsi-suzuki-condition-screen-agent:86159f8b9e6a",
+  "n_concurrent_trials": 3,
+  "billing": {
+    "route": "existing_claude_max_subscription_only",
+    "paid_api_usd": 0,
+    "extra_usage_required": false,
+    "on_quota_limit": "stop_and_preserve; no_automatic_resume"
+  },
+  "external_reference": {
+    "reported_percent": 33.3,
+    "source": "user-specified benchmark reference",
+    "paired_local_baseline": false
+  },
+  "reporting": "Evolve-set scores only. No local H0 rerun, no OOD set, no generalization claim."
+}
