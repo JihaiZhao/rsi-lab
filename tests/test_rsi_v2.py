@@ -192,6 +192,9 @@ class PlanAndEvidenceTests(unittest.TestCase):
             self.assertEqual(contract.validate_implementation(hook, ['hooks.json', 'tools/audit.py', 'smoke.json'], d), [])
             self.assertTrue(contract.validate_implementation(hook, ['hooks.json', 'tools/other.py'], d))
         self.assertEqual(portable.component_of('hooks/audit.py'), 'hook')
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'hooks.json', {'stop': [{'command': 'python3'}], 'pre_tool': 'oops'})
+            self.assertEqual(portable.referenced_scripts(d), {})
         self.assertIn('Planned tool edit has no matching file change', contract.validate_implementation(one, ['instructions.md']))
         history = [{'trials': 6, 'accepted': False, 'reason': 'regression', 'components_changed': ['instructions']},
                    {'trials': 6, 'accepted': False, 'reason': 'unresolved_in_noise_band', 'components_changed': ['instructions']}]

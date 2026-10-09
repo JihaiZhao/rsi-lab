@@ -26,11 +26,15 @@ def component_of(path):
 def referenced_scripts(folder):
     """Bundle-relative scripts launched by hooks or MCP servers, keyed to that component."""
     refs = {}
-    for entries in read_hooks(folder).values():
-        for entry in entries:
-            refs[entry['args'][0][len(RUNTIME_ROOT)+1:]] = 'hook'
-    for server in read_mcp(folder).values():
-        refs[server['args'][0][len(RUNTIME_ROOT)+1:]] = 'mcp'
+    try:  # Malformed declarations are reported by validate(); never crash the controller here.
+        launches = [(e, 'hook') for entries in read_hooks(folder).values() for e in entries]
+        launches += [(s, 'mcp') for s in read_mcp(folder).values()]
+    except (AttributeError, TypeError, ValueError):
+        return refs
+    for entry, component in launches:
+        args = entry.get('args') if isinstance(entry, dict) else None
+        if isinstance(args, list) and args and isinstance(args[0], str) and args[0].startswith(RUNTIME_ROOT+'/'):
+            refs[args[0][len(RUNTIME_ROOT)+1:]] = component
     return refs
 
 
