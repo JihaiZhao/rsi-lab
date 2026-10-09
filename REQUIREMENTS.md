@@ -80,3 +80,7 @@ The user authorized a fresh run of framework v2 (docs/DESIGN.md) with config/che
 Sonnet 5.5 for policy and every role, the two official Chem tasks, at most five rounds, cascade
 evaluation (1 screen trial per task, top-up to 3), pre-registered noise-aware selection, existing
 Claude Max subscription only, no local H0 rerun and no evidence from earlier experiments.
+
+Run chem-sonnet-v2-20261009-02 stopped after round 4 (framework bug: float rewards). The user chose to
+close it (round 4 decided offline, round 2 selected, see its closure.json) and authorized a fresh
+5-round run chem-sonnet-v2-20261009-03 with the fixes merged. No evidence from run 02 is passed to it.

@@ -1,6 +1,6 @@
 {
   "framework": "rsi-v2 (docs/DESIGN.md)",
-  "experiment_id": "chem-sonnet-v2-20261009-02",
+  "experiment_id": "chem-sonnet-v2-20261009-03",
   "status": "authorized",
   "budget_status": "subscription_only_authorized",
   "benchmark": {
@@ -58,11 +58,15 @@
     "paired_local_baseline": false
   },
   "reporting": "Evolve-set scores only. No local H0 rerun, no OOD set, no generalization claim.",
-  "authorization": "User authorized this fresh v2 Chem run on 2026-10-09: Sonnet 5.5 in every role, 2 tasks, 5 rounds, cascade 1+2 trials per task, Max subscription only, no H0 rerun. User explicitly authorized a fresh restart under a new experiment_id after re-login.",
+  "authorization": "User authorized this fresh v2 Chem run on 2026-10-09: Sonnet 5.5 in every role, 2 tasks, 5 rounds, cascade 1+2 trials per task, Max subscription only, no H0 rerun. User explicitly authorized a fresh restart under a new experiment_id after re-login. After run 02 stopped, the user chose to close it and start this fresh 5-round run with the merged fixes.",
   "prior_attempts": [
     {
       "experiment_id": "chem-sonnet-v2-20261009",
       "outcome": "stopped before any model call: subscription usage check returned HTTP 401; preserved, not resumed"
+    },
+    {
+      "experiment_id": "chem-sonnet-v2-20261009-02",
+      "outcome": "stopped after round 4 trials: selection crashed on float rewards; closed by user with round 4 decided offline (closure.json); excluded from new evidence"
     }
   ]
 }
