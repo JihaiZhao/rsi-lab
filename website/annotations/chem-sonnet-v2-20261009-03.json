@@ -1,0 +1,35 @@
+{
+  "rounds": {
+    "1": {
+      "title": "Campaign checklist and a checking tool",
+      "summary": "From an empty extension: a checklist in instructions.md (read the task files first, keep a validated model on disk, check every batch) plus campaign_check.py, a helper for batch checks, local NDCG and model probing.",
+      "observation": "The first draft copied task file paths verbatim and was stopped by the leakage scan; the critic then rejected a Suzuki-specific test string. Both were repaired before any trial."
+    },
+    "2": {
+      "title": "Stop hook audit (not evaluated)",
+      "summary": "A one-shot stop hook asking the agent to validate its delivered model on a held-out stand-in before finishing.",
+      "observation": "Lost to a framework gap: the hook script was rejected under hooks/ and again after moving to tools/. No trial was spent. The gap was fixed after the run."
+    },
+    "3": {
+      "title": "One-shot stop hook audit",
+      "summary": "The same idea, declared correctly: when a model has been delivered and time remains, the stop hook blocks once and asks for a held-out check against one structurally different alternative.",
+      "observation": "Accepted as a credible gain over round 1 (3/6 vs 1/6, posterior 0.87). The hook visibly intervened in every trial. Whether the audit caused any pass was not established."
+    },
+    "4": {
+      "title": "Discovery ledger in the instructions",
+      "summary": "Before each experiment round, write down hits so far, the target, and hits still needed per remaining round, then shift toward neighbours of the best results when behind.",
+      "observation": "4/6 but not accepted: one extra pass is inside the noise band and the candidate was neither simpler nor cheaper. Predicted a Propylene gain; the extra pass came on Suzuki."
+    },
+    "5": {
+      "title": "Hook before each experiment batch",
+      "summary": "A pre_tool hook on asb run that blocks once per round with a data-derived digest and asks for a hit ledger before spending the round.",
+      "observation": "Passed the screen 2/2, then failed all 4 top-up trials (2/6). Not accepted. The critic made the proposer remove a supporting instructions note as over budget, arguably too strict."
+    }
+  },
+  "notes": [
+    "Every score here is an evolve-set score on the same two tasks that guided the revisions. It is not evidence of performance on unseen tasks.",
+    "No local native Claude Code baseline was run. The 33.3% benchmark figure is an external reference, not a paired comparison.",
+    "With six binary trials per candidate, the 95% interval on a pass rate is roughly ±35–40 points. Read the posteriors, not just the rates.",
+    "Propylene stayed at 1/3 for every evaluated candidate; all accepted movement came from Suzuki."
+  ]
+}
